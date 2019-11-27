@@ -36,6 +36,7 @@ SERVERNAME = "O Tempora, O Mores"
 GAME_SLOGAN = "Adventures in Latin"
 TELNET_ENABLED = False
 TIME_FACTOR = 6.0
+MULTISESSION = 2
 
 ######################################################################
 # Settings given in secret_settings.py override those in this file.
