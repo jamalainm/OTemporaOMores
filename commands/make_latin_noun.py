@@ -78,11 +78,21 @@ class CmdMakeLatinNoun(Command):
             else:
                 caller.msg("I'm sorry, that is not an acceptible response. Start over.")
 
+        # create the synopsis
+
+        word = latin_declension.DeclineNoun(nominative,genitive,gender)
+        forms = word.latin_declension.make_paradigm()
+
+        # insert the gender at the top
+        forms.insert(0,('gender',gender))
+
         # Create the object
         obj = create_object('typeclasses.objects.Object',
                 key = nominative,
                 location = caller.location,
-                attributes=[('gender',gender),('nom_sg',nominative),('gen_sg',genitive)],
+                # I'm getting greedy; the below commented line works, but I want eveyrhing!
+                # attributes=[('gender',gender),('nom_sg',nominative),('gen_sg',genitive)],
+                attributes=forms,
                 tags=['latin'],
                 )
 

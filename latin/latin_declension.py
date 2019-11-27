@@ -170,6 +170,3 @@ class DeclineNoun:
             declension.append((value,forms[index]))
 
         return declension
-
-word = DeclineNoun('ars','artis',1)
-print(word.make_paradigm())
