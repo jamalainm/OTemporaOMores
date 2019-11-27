@@ -150,13 +150,26 @@ class DeclineNoun:
 
     def make_paradigm(self):
         
+        labels = ['nom_sg','gen_sg','dat_sg','acc_sg','abl_sg','voc_sg','nom_pl','gen_pl','dat_pl','acc_pl','abl_pl','voc_pl']
+
+        forms = []
+
         if DeclineNoun.id_declension(self)[0] == 1:
-            return self.first_declension()
+            forms = self.first_declension()
         elif DeclineNoun.id_declension(self)[0] == 2:
-            return DeclineNoun.second_declension(self)
+            forms = DeclineNoun.second_declension(self)
         elif DeclineNoun.id_declension(self)[0] == 3:
-            return DeclineNoun.third_declension(self)
+            forms = DeclineNoun.third_declension(self)
         elif DeclineNoun.id_declension(self)[0] == 4:
-            return DeclineNoun.fourth_declension(self)
+            forms = DeclineNoun.fourth_declension(self)
         else:
-            return DeclineNoun.fifth_declension(self)
+            forms = DeclineNoun.fifth_declension(self)
+
+        declension = []
+        for index,value in enumerate(labels):
+            declension.append((value,forms[index]))
+
+        return declension
+
+word = DeclineNoun('ars','artis',1)
+print(word.make_paradigm())
