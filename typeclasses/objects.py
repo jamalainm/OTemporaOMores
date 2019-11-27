@@ -162,8 +162,11 @@ class Object(EventObject,LatinNoun):
 
     def at_object_creation(self):
 
+        # add all of the case endings to attributes
+
         word = DeclineNoun(self.db.nom_sg,self.db.gen_sg,self.db.gender)
         forms = word.make_paradigm()
+        all_forms = forms
         forms = forms[2:]
         self.db.dat_sg = forms[0][1]
         self.db.acc_sg = forms[1][1]
@@ -176,4 +179,6 @@ class Object(EventObject,LatinNoun):
         self.db.abl_pl = forms[8][1]
         self.db.voc_pl = forms[9][1]
 
-        # also need to add the forms as aliases
+        # Add the variant forms to aliases for easy interaction
+        for form in all_forms:
+            self.aliases.add(form[1])
