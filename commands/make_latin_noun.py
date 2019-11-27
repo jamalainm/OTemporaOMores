@@ -3,7 +3,7 @@
 from evennia import Command
 from evennia import create_object
 
-class CmdMakeLatinNoun(Command):
+class CmdMakeLatinObject(Command):
     """
     Create a latin object through a dialog
 
@@ -24,7 +24,7 @@ class CmdMakeLatinNoun(Command):
     dialog process
     """
 
-    key = "+create_latin_noun"
+    key = "+create_latin_object"
     locks = "cmd:perm(Builders)"
     help_category = 'Latin'
 
