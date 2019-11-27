@@ -59,3 +59,5 @@ class Character(EventCharacter,LatinNoun):
         # Add the variant forms to aliases for easy interaction
         for form in all_forms:
             self.aliases.add(form[1])
+
+        self.tags.add('latin')

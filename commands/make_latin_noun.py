@@ -83,7 +83,6 @@ class CmdMakeLatinObject(Command):
                 key = nominative,
                 location = caller.location,
                 attributes=[('gender',gender),('nom_sg',nominative),('gen_sg',genitive)],
-                tags=['latin'],
                 )
 
         # Announce object's creation
@@ -171,7 +170,6 @@ class CmdMakeLatinCharacter(Command):
                 key = nominative,
                 location = caller.location,
                 attributes=[('gender',gender),('nom_sg',nominative),('gen_sg',genitive)],
-                tags=['latin'],
                 )
 
         # Announce object's creation
