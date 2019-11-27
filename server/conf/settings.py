@@ -35,11 +35,16 @@ from evennia.settings_default import *
 SERVERNAME = "O Tempora, O Mores"
 GAME_SLOGAN = "Adventures in Latin"
 TELNET_ENABLED = False
+ALLOWED_HOSTS = ["otemporaomor.es","155.133.131.65"]
+WEBSERVER_PORTS = [(80, 4005)]
+WEBSERVER_INTERFACES = ["155.133.131.65"]
 TIME_FACTOR = 6.0
 MULTISESSION_MODE = 2
 MAX_NR_CHARACTERS = 5
 DEBUG = True
-INSTALLED_APPS += ('web.chargen',)
+INSTALLED_APPS += ('web.chargen','nocaptcha_recaptcha')
+NORECAPTCHA_SITE_KEY = '6Lc1-8QUAAAAAAeoIIemPrC5xJH5AB14l3zq-mWr'
+NORECAPTCHA_SECRET_KEY = '6Lc1-8QUAAAAAEouvVA5tuNYefT9X_myaO9ZHLoo'
 
 ######################################################################
 # Settings given in secret_settings.py override those in this file.
