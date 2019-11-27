@@ -37,7 +37,9 @@ GAME_SLOGAN = "Adventures in Latin"
 TELNET_ENABLED = False
 TIME_FACTOR = 6.0
 MULTISESSION = 2
-DEBUT = True
+MAX_NR_CHARACTERS = 2
+DEBUG = True
+INSTALLED_APPS += ('web.chargen',)
 
 ######################################################################
 # Settings given in secret_settings.py override those in this file.

@@ -12,6 +12,9 @@ from evennia.web.urls import urlpatterns
 # eventual custom patterns
 custom_patterns = [
     # url(r'/desired/url/', view, name='example'),
+    # may want to change the first url in the future in order to
+    # connect it with the webpage's link for making new characters
+    url(r'^chargen/', include('web.chargen.urls')),
 ]
 
 # this is required by Django.
