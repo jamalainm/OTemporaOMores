@@ -2,6 +2,7 @@
 
 from evennia import Command
 from evennia import create_object
+from latin.latin_declension import DeclineNoun
 
 class CmdMakeLatinNoun(Command):
     """
@@ -78,13 +79,15 @@ class CmdMakeLatinNoun(Command):
             else:
                 caller.msg("I'm sorry, that is not an acceptible response. Start over.")
 
+
         # create the synopsis
 
-        word = latin_declension.DeclineNoun(nominative,genitive,gender)
-        forms = word.latin_declension.make_paradigm()
+        word = DeclineNoun(nominative,genitive,gender)
+        forms = word.make_paradigm()
 
         # insert the gender at the top
         forms.insert(0,('gender',gender))
+        # caller.msg(forms)
 
         # Create the object
         obj = create_object('typeclasses.objects.Object',
