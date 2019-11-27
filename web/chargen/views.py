@@ -66,8 +66,7 @@ def creating(request):
                 char.locks.add("puppet:id(%i) or pid(%i) or perm(Developers) "
                     "or pperm(Developers)" % (char.id, user.id))
             # changing from "/chargen" to "/characters"
-            # in future in order to link it to the creation dialog
-            return HttpResponseRedirect('/chargen')
+            return HttpResponseRedirect('/characters')
     else:
         form = AppForm()
     return render(request, 'chargen/create.html', {'form': form})
