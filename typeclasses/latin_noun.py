@@ -1,6 +1,8 @@
 # file mygame/typeclasses/latin_noun.py
 
 from evennia import DefaultObject
+# adding the following for colors in names for pluralization
+from evennia.utils import ansi
 
 class LatinNoun(DefaultObject):
 
@@ -67,4 +69,42 @@ class LatinNoun(DefaultObject):
 
         self.at_object_creation()
         self.basetype_posthook_setup()
+
+# adding the pluralization rules; so far they will only work for
+# nominative plurals for when you look in a new room; not sure
+# what to do with other plural functionality
+
+    def get_numbered_name(self, count, looker, **kwargs):
+        """ 
+        Return the numbered (Singular, plural) forms of this object's key.
+        This is by default called by return_appearance and is used for
+        grouping multiple same-named of this object. Note that this will
+        be called on *every* member of a group even though the plural name
+        will be only shown once. Also the singular display version, such as
+        'an apple', 'a tree' is determined from this method.
+
+        Args:
+            count (int): Number of objects of this type
+            looker (Object): Onlooker. Not used by default
+        Kwargs:
+            key (str): Optional key to pluralize, if given, use this instead of
+            the object's key
+        Returns:
+            singular (str): The singular form to display
+            plural (str): The determined plural form of the key, including count.
+        """
+        key = kwargs.get("key", self.key)
+        key = ansi.ANSIString(key) # This is needed to allow inflection of colored names
+        plural = self.db.nom_pl
+        plural = "%s %s" % (count, plural)
+        singular = self.db.nom_sg
+        if not self.aliases.get(plural, category="plural_key"):
+            # We need to wipe any old plurals/an/a in case key changed in the interim
+            self.aliases.clear(category="plural_key")
+            self.aliases.add(plural, category="plural_key")
+            # save the singular form as an alias here too so we can display "an egg"
+            # and also look at "an egg".
+            self.aliases.add(singular, category="plural_key")
+        return singular, plural
+
 
