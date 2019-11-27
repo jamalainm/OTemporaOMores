@@ -1,0 +1,17 @@
+<!-- file mygame/web/chargen/templates/chargen/create.html-->
+
+{% extends "base.html" %}
+{% block content %}
+<h1>Character Creation</h1>
+{% if user.is_authenticated %}
+<!-- changed from "chargen/create/" to "characters/create"-->
+<form action="/characters/create/" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" name="submit" value="Submit"/>
+</form>
+{% else %}
+<p>You aren't logged in.</p>
+{% endif %}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock %}
