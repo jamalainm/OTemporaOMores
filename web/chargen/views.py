@@ -63,8 +63,10 @@ def creating(request):
                 user.db._playable_characters.append(char)
                 # add the right locks for the character so the account can
                 #  puppet it
-                char.locks.add("puppet:id(%i) or pid(%i) or perm(Developers) "
-                    "or pperm(Developers)" % (char.id, user.id))
+                # editing the below in order to give account permission
+                # to delete, which for some reason it seems to be lacking
+                # char.locks.add("puppet:id(%i) or pid(%i) or perm(Developers) "
+                char.locks.add(f"puppet:id({char.id}) or pid({user.id}) or perm(Developers) or pperm(Developers);delete:id({user.id}) or perm(Admin)")
             # changing from "/chargen" to "/characters"
             return HttpResponseRedirect('/characters')
     else:
