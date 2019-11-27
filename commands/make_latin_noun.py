@@ -2,7 +2,10 @@
 
 from evennia import Command
 from evennia import create_object
-from latin.latin_declension import DeclineNoun
+# Want to move the form production to the
+# object creation script of the different
+# typeclasses, so commenting that out.
+# from latin.latin_declension import DeclineNoun
 
 class CmdMakeLatinNoun(Command):
     """
@@ -81,21 +84,25 @@ class CmdMakeLatinNoun(Command):
 
 
         # create the synopsis
-
-        word = DeclineNoun(nominative,genitive,gender)
-        forms = word.make_paradigm()
-
-        # insert the gender at the top
-        forms.insert(0,('gender',gender))
-        # caller.msg(forms)
+        # This worked, but I'd like to move this to the
+        # at creation section of the different type-
+        # classes; commenting out here and only
+        # defining the attributes of gender, nom sg,
+        # and gen sg
+#
+#        word = DeclineNoun(nominative,genitive,gender)
+#        forms = word.make_paradigm()
+#
+#        # insert the gender at the top
+#        forms.insert(0,('gender',gender))
+        caller.msg("I am just before object creation")
 
         # Create the object
         obj = create_object('typeclasses.objects.Object',
                 key = nominative,
                 location = caller.location,
                 # I'm getting greedy; the below commented line works, but I want eveyrhing!
-                # attributes=[('gender',gender),('nom_sg',nominative),('gen_sg',genitive)],
-                attributes=forms,
+                attributes=[('gender',gender),('nom_sg',nominative),('gen_sg',genitive)],
                 tags=['latin'],
                 )
 
