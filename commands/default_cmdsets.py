@@ -43,6 +43,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdCallback())
         self.add(make_latin_noun.CmdMakeLatinObject())
         self.add(make_latin_noun.CmdMakeLatinCharacter())
+        self.add(make_latin_noun.CmdMakeLatinRoom())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):
