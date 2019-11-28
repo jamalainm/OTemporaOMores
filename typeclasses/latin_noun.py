@@ -3,6 +3,9 @@
 from evennia import DefaultObject
 # adding the following for colors in names for pluralization
 from evennia.utils import ansi
+# adding the following for redefinition of 'return_appearance'
+from collections import defaultdict
+# from evennia.utils.utils import list_to_string
 
 class LatinNoun(DefaultObject):
 
@@ -74,6 +77,51 @@ class LatinNoun(DefaultObject):
 # nominative plurals for when you look in a new room; not sure
 # what to do with other plural functionality
 
+    # redefine list_to_stringfor this function to use "et"
+
+    def list_to_string(inlist, endsep="et", addquote=False):
+        """
+        This pretty-formats a list as string output, adding an optional
+        alternative separator to the second to last entry.  If `addquote`
+        is `True`, the outgoing strings will be surrounded by quotes.
+
+        Args:
+            inlist (list): The list to print.
+            endsep (str, optional): If set, the last item separator will
+                be replaced with this value.
+            addquote (bool, optional): This will surround all outgoing
+                values with double quotes.
+
+        Returns:
+            liststr (str): The list represented as a string.
+
+        Examples:
+
+            ```python
+             # no endsep:
+                [1,2,3] -> '1, 2, 3'
+             # with endsep=='and':
+                [1,2,3] -> '1, 2 and 3'
+             # with addquote and endsep
+                [1,2,3] -> '"1", "2" and "3"'
+            ```
+
+        """
+        if not endsep:
+            endsep = ","
+        else:
+            endsep = " " + endsep
+        if not inlist:
+            return ""
+        if addquote:
+            if len(inlist) == 1:
+                return '"%s"' % inlist[0]
+            return ", ".join('"%s"' % v for v in inlist[:-1]) + "%s %s" % (endsep, '"%s"' % inlist[-1])
+        else:
+            if len(inlist) == 1:
+                return str(inlist[0])
+            return ", ".join(str(v) for v in inlist[:-1]) + "%s %s" % (endsep, inlist[-1])
+
     def get_numbered_name(self, count, looker, **kwargs):
         """ 
         Return the numbered (Singular, plural) forms of this object's key.
@@ -106,4 +154,56 @@ class LatinNoun(DefaultObject):
             # and also look at "an egg".
             self.aliases.add(singular, category="plural_key")
         return singular, plural
+
+    def return_appearance(self, looker, **kwargs):
+        """
+        # Lightly editing to change "You see" to "Ecce"
+        # and 'Exits' to 'Ad hos locos ire potes:'
+        This formats a description. It is the hook a 'look' command
+        should call.
+
+        Args:
+            looker (Object): Object doing the looking.
+            **kwargs (dict): Arbitrary, optional arguments for users
+                overriding the call (unused by default).
+        """
+
+
+        if not looker:
+            return ""
+        # get and identify all objects
+        visible = (con for con in self.contents if con != looker and con.access(looker, "view"))
+        exits, users, things = [], [], defaultdict(list)
+        for con in visible:
+            key = con.get_display_name(looker)
+            if con.destination:
+                exits.append(key)
+            elif con.has_account:
+                users.append("|c%s|n" % key)
+            else:
+                # things can be pluralized
+                things[key].append(con)
+        # get description, build string
+        string = "|c%s|n\n" % self.get_display_name(looker)
+        desc = self.db.desc
+        if desc:
+            string += "%s" % desc
+        if exits:
+            string += "\n|wAd hos locos potes ire:|n\n " + LatinNoun.list_to_string(exits)
+        if users or things:
+            # handle pluralization of things (never pluralize users)
+            thing_strings = []
+            for key, itemlist in sorted(things.items()):
+                nitem = len(itemlist)
+                if nitem == 1:
+                    key, _ = itemlist[0].get_numbered_name(nitem, looker, key=key)
+                else:
+                    key = [item.get_numbered_name(nitem, looker, key=key)[1] for item in itemlist][
+                        0
+                    ]
+                thing_strings.append(key)
+
+            string += "\n|wEcce:|n\n " + LatinNoun.list_to_string(users + thing_strings)
+
+        return string
 

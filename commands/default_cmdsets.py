@@ -17,6 +17,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 from evennia import default_cmds
 from evennia.contrib.ingame_python.commands import CmdCallback
 from commands import make_latin_noun
+from commands import latin_commands
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -44,6 +45,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(make_latin_noun.CmdMakeLatinObject())
         self.add(make_latin_noun.CmdMakeLatinCharacter())
         self.add(make_latin_noun.CmdMakeLatinRoom())
+        self.add(latin_commands.CmdLook())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):
