@@ -292,7 +292,6 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         for thing in objects:
             if not thing:
                 objects.remove(thing)
-        caller.msg(f"|rHave made a list of arguments|n: {objects}")
         # require 2 arguments
         if len(objects) != 2:
             caller.msg("Usage: da <rem> <alicui>")
@@ -303,19 +302,14 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
             if not noun.db.nom_sg:
                 external.remove(noun)
         possessions = caller.contents
-        caller.msg(f"|rHere are the things you have:|n {possessions}")
-        caller.msg(f"|rHere are the things in the room:|n {external}")
         stuff = external + possessions
-        caller.msg(f"|rThis is everything we're searching through:|n {stuff}")
         # see if first argument is in either pool
         thing1, arg1 = which_one(objects[0],caller,stuff)
-        caller.msg(f"|rFinished search for first argument:|n {arg1}.")
         arg1 = arg1.lower()
         if not thing1:
             return
         # see if second argument is in either pool
         thing2, arg2 = which_one(objects[1],caller,stuff)
-        caller.msg(f"|rFinished search for second argument:|n {arg1}.")
         arg2 = arg2.lower()
         if not thing2:
             return
@@ -324,13 +318,11 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         for possession in possessions:
             if possession:
                 accusatives.append(possession.db.acc_sg.lower())
-        caller.msg(f"|rThese are the accusative forms of your possessions:|n {accusatives}")
         # make a list of the dative forms of the things outside of the inventory
         datives = []
         for extern in external:
             if extern:
                 datives.append(extern.db.dat_sg.lower())
-        caller.msg(f"|rThese are the dative forms of your possessions:|n {datives}")
 
         # check grammar
 
@@ -359,10 +351,8 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
             return
 
         to_give = direct_object
-        caller.msg(f"Assigned {direct_object} as direct object|n")
         
         target = indirect_object
-        caller.msg(f"Assigned {indirect_object} as indirect object|n")
         if not (to_give and target):
             return
         if target == caller:
