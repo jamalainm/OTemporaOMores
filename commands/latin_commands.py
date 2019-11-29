@@ -30,10 +30,10 @@ def which_one(args,caller,stuff):
         thing = args.split('-')
         args = thing[-1].strip().lower()
         # get the contents of the room
-        everything = stuff
+#        everything = stuff
         # identify what items are the same AND match the intended case
         same = []
-        for item in everything:
+        for item in stuff:
             if args in item.aliases.all():
                 same.append(item)
         # Return feedback if a number higher than the number of matches
@@ -48,7 +48,20 @@ def which_one(args,caller,stuff):
         target = same[int(thing[0])-1]
         return target, args
     else:
-        target = caller.search(args)
+        same = []
+        for item in stuff:
+            if args in item.aliases.all():
+                same.append(item)
+        if len(same) == 0:
+            caller.msg("Non invenisti!")
+            return None, args
+        elif len(same) != 1:
+            caller.msg(f"Sunt {len(same)}. Ecce:")
+            for index,item in enumerate(same):
+                caller.msg(f"{index + 1}-{item}")
+            return None, args
+        else:
+            target = same[0]
         return target, args
 
 class CmdHome(COMMAND_DEFAULT_CLASS):
@@ -163,22 +176,15 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
         """implements the command."""
         # try to duplicate 'try_num_prefixes' from 'evennia/commands/cmdparser.py'
         
-        num_ref_match = _MULTIMATCH_REGEX.match(self.args)
-        if num_ref_match:
-            # the user might be trying to identify the command
-            # with a #num-command style syntax. We expect the regex to
-            # contain the groups "number" and "name".
-            mindex, new_raw_string = num_ref_match.group("number"), num_ref_match.group("name")
-            self.args = new_raw_string.strip()
-
-        # all above is the redefinition of 'try_num_prefixes'
-
         caller = self.caller
 
         if not self.args:
             caller.msg("Quid capere velis?")
             return
-        obj = caller.search(self.args, location=caller.location)
+        caller.msg(caller.location.contents)
+        stuff = caller.location.contents
+        obj, self.args = which_one(self.args,caller,stuff)
+#        obj = caller.search(self.args, location=caller.location)
         if not obj:
             return
         if obj.db.acc_sg.lower() != self.args.strip().lower():
