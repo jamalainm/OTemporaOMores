@@ -50,6 +50,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(latin_commands.CmdGet())
         self.add(latin_commands.CmdDrop())
         self.add(latin_commands.CmdSay())
+        self.add(latin_commands.CmdGive())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):

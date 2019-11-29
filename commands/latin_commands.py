@@ -34,7 +34,9 @@ def which_one(args,caller,stuff):
         # identify what items are the same AND match the intended case
         same = []
         for item in stuff:
-            if args in item.aliases.all():
+            characteristics = item.aliases.all()
+            [x.lower() for x in characteristics]
+            if args in characteristics:
                 same.append(item)
         # Return feedback if a number higher than the number of matches
         # was provided
@@ -49,8 +51,11 @@ def which_one(args,caller,stuff):
         return target, args
     else:
         same = []
+        args = args.lower()
         for item in stuff:
-            if args in item.aliases.all():
+            characteristics = item.aliases.all()
+            [x.lower() for x in characteristics]
+            if args in characteristics:
                 same.append(item)
         if len(same) == 0:
             caller.msg("Non invenisti!")
@@ -230,7 +235,7 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
 
         caller = self.caller
         if not self.args:
-            caller.msg("Drop what?")
+            caller.msg("Quid relinquere velis?") # What would you like to give up?
             return
 
         # Because the DROP command by definition looks for items
@@ -254,7 +259,7 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
             return
 
         obj.move_to(caller.location, quiet=True)
-        caller.msg("%s reliquisti." % (obj.db.acc_sg,))
+        caller.msg("%s reliquisti." % (obj.db.acc_sg,)) # You have given X up
         caller.location.msg_contents("%s %s reliquit." % (caller.name, obj.name), exclude=caller)
         # Call the object script's at_drop() method.
         obj.at_drop(caller)
@@ -265,14 +270,13 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
     give away something to someone
 
     Usage:
-      give <inventory obj> <to||=> <target>
+      da <rem> <alicui> # give something to someone
 
     Gives an items from your inventory to another character,
     placing it in their inventory.
     """
 
-    key = "give"
-    rhs_split = ("=", " to ")  # Prefer = delimiter, but allow " to " usage.
+    key = "da"
     locks = "cmd:all()"
     arg_regex = r"\s|$"
 
@@ -280,23 +284,92 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         """Implement give"""
 
         caller = self.caller
-        if not self.args or not self.rhs:
-            caller.msg("Usage: give <inventory object> = <target>")
+        if not self.args:
+            caller.msg("Usage: da <rem> <alicui>")
             return
-        to_give = caller.search(
-            self.lhs,
-            location=caller,
-            nofound_string="You aren't carrying %s." % self.lhs,
-            multimatch_string="You carry more than one %s:" % self.lhs,
-        )
-        target = caller.search(self.rhs)
+        # get the various arguments
+        objects = self.args.split(' ')
+        for thing in objects:
+            if not thing:
+                objects.remove(thing)
+        caller.msg(f"|rHave made a list of arguments|n: {objects}")
+        # require 2 arguments
+        if len(objects) != 2:
+            caller.msg("Usage: da <rem> <alicui>")
+            return
+        # create the pool of things to search
+        external = caller.location.contents
+        for noun in external:
+            if not noun.db.nom_sg:
+                external.remove(noun)
+        possessions = caller.contents
+        caller.msg(f"|rHere are the things you have:|n {possessions}")
+        caller.msg(f"|rHere are the things in the room:|n {external}")
+        stuff = external + possessions
+        caller.msg(f"|rThis is everything we're searching through:|n {stuff}")
+        # see if first argument is in either pool
+        thing1, arg1 = which_one(objects[0],caller,stuff)
+        caller.msg(f"|rFinished search for first argument:|n {arg1}.")
+        arg1 = arg1.lower()
+        if not thing1:
+            return
+        # see if second argument is in either pool
+        thing2, arg2 = which_one(objects[1],caller,stuff)
+        caller.msg(f"|rFinished search for second argument:|n {arg1}.")
+        arg2 = arg2.lower()
+        if not thing2:
+            return
+        # make a list of the object forms of the inventory:
+        accusatives = []
+        for possession in possessions:
+            if possession:
+                accusatives.append(possession.db.acc_sg.lower())
+        caller.msg(f"|rThese are the accusative forms of your possessions:|n {accusatives}")
+        # make a list of the dative forms of the things outside of the inventory
+        datives = []
+        for extern in external:
+            if extern:
+                datives.append(extern.db.dat_sg.lower())
+        caller.msg(f"|rThese are the dative forms of your possessions:|n {datives}")
+
+        # check grammar
+
+        if thing1 in possessions and thing2 in external:
+            if arg1 not in accusatives:
+                caller.msg(f"(Did you mean '{thing1.db.acc_sg}'?)")
+                return
+            elif arg2 not in datives:
+                caller.msg(f"(Did you mean '{thing2.db.dat_sg}'?)")
+                return
+            else:
+                direct_object = thing1
+                indirect_object = thing2
+        elif thing1 in external and thing2 in possessions:
+            if arg1 not in datives:
+                caller.msg(f"(Did you mean '{thing1.db.dat_sg}'?)")
+                return
+            if arg2 not in accusatives:
+                caller.msg(f"(Did you mean '{thing2.db.acc_sg}'?)")
+                return
+            else:
+                direct_object = thing2
+                indirect_object = thing1
+        else:
+            caller.msg("Usage: da <rem> <alicui>")
+            return
+
+        to_give = direct_object
+        caller.msg(f"Assigned {direct_object} as direct object|n")
+        
+        target = indirect_object
+        caller.msg(f"Assigned {indirect_object} as indirect object|n")
         if not (to_give and target):
             return
         if target == caller:
-            caller.msg("You keep %s to yourself." % to_give.key)
+            caller.msg("Tu %s tibi dedisti." % to_give.db.acc_sg)
             return
         if not to_give.location == caller:
-            caller.msg("You are not holding %s." % to_give.key)
+            caller.msg("%s in manibus non habes." % to_give.db.acc_sg)
             return
 
         # calling at_before_give hook method
@@ -304,9 +377,9 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
             return
 
         # give object
-        caller.msg("You give %s to %s." % (to_give.key, target.key))
+        caller.msg("%s %s dedisti." % (to_give.db.acc_sg, target.db.dat_sg))
         to_give.move_to(target, quiet=True)
-        target.msg("%s gives you %s." % (caller.key, to_give.key))
+        target.msg("%s %s tibi dedit." % (caller.key, to_give.db.acc_sg))
         # Call the object script's at_give() method.
         to_give.at_give(caller, target)
 
