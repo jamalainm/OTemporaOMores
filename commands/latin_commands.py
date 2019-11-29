@@ -25,12 +25,12 @@ __all__ = (
     "CmdAccess",
 )
 
-def which_one(args,caller):
+def which_one(args,caller,stuff):
     if '-' in args:
         thing = args.split('-')
         args = thing[-1].strip().lower()
         # get the contents of the room
-        everything = caller.location.contents
+        everything = stuff
         # identify what items are the same AND match the intended case
         same = []
         for item in everything:
@@ -106,7 +106,8 @@ class CmdLook(COMMAND_DEFAULT_CLASS):
                 caller.msg("Nihil est quod aspicere potes!")
                 return
         else:
-            target, self.args = which_one(self.args,caller)
+            stuff = caller.location.contents + caller.contents
+            target, self.args = which_one(self.args,caller,stuff)
             if not target:
                 return
         if self.args.strip().lower() != target.db.acc_sg.lower() and self.args:
