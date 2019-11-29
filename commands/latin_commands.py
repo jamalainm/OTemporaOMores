@@ -343,12 +343,12 @@ class CmdSay(COMMAND_DEFAULT_CLASS):
     speak as your character
 
     Usage:
-      say <message>
+      dic <message>
 
     Talk to those in your current location.
     """
 
-    key = "say"
+    key = "dic"
     aliases = ['"', "'"]
     locks = "cmd:all()"
 
