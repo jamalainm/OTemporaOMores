@@ -181,10 +181,8 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
         if not self.args:
             caller.msg("Quid capere velis?")
             return
-        caller.msg(caller.location.contents)
         stuff = caller.location.contents
         obj, self.args = which_one(self.args,caller,stuff)
-#        obj = caller.search(self.args, location=caller.location)
         if not obj:
             return
         if obj.db.acc_sg.lower() != self.args.strip().lower():
@@ -213,18 +211,19 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
 
 class CmdDrop(COMMAND_DEFAULT_CLASS):
     """
-    drop something
+    Get rid of something
 
     Usage:
-      drop <obj>
+      relinque <rem>
 
     Lets you drop an object from your inventory into the
     location you are currently in.
     """
 
-    key = "drop"
+    key = "relinque"
     locks = "cmd:all()"
     arg_regex = r"\s|$"
+    help_category = 'Latin'
 
     def func(self):
         """Implement command"""
@@ -236,13 +235,18 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
 
         # Because the DROP command by definition looks for items
         # in inventory, call the search function using location = caller
-        obj = caller.search(
-            self.args,
-            location=caller,
-            nofound_string="You aren't carrying %s." % self.args,
-            multimatch_string="You carry more than one %s:" % self.args,
-        )
+#        obj = caller.search(
+#            self.args,
+#            location=caller,
+#            nofound_string="You aren't carrying %s." % self.args,
+#            multimatch_string="You carry more than one %s:" % self.args,
+#        )
+        stuff = caller.contents
+        obj, self.args = which_one(self.args,caller,stuff)
         if not obj:
+            return
+        if obj.db.acc_sg.lower() != self.args.strip().lower():
+            self.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
             return
 
         # Call the object script's at_before_drop() method.
@@ -250,8 +254,8 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
             return
 
         obj.move_to(caller.location, quiet=True)
-        caller.msg("You drop %s." % (obj.name,))
-        caller.location.msg_contents("%s drops %s." % (caller.name, obj.name), exclude=caller)
+        caller.msg("%s reliquisti." % (obj.db.acc_sg,))
+        caller.location.msg_contents("%s %s reliquit." % (caller.name, obj.name), exclude=caller)
         # Call the object script's at_drop() method.
         obj.at_drop(caller)
 

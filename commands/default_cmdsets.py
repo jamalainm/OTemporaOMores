@@ -48,6 +48,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(latin_commands.CmdLook())
         self.add(latin_commands.CmdInventory())
         self.add(latin_commands.CmdGet())
+        self.add(latin_commands.CmdDrop())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):
