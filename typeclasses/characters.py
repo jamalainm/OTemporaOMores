@@ -235,7 +235,7 @@ class Character(EventCharacter,LatinNoun):
         # Having a problem with displaying speaker's name; changing 'object' to 'self.key'
         sentence = message.strip()
         words = sentence.split(' ')
-        speeches = [f'"{words[0]}", inquis.',f'{self.key} "{words[0]}" inquit.']
+        speeches = [f'"{words[0]}" inquis.',f'{self.key} "{words[0]}" inquit.']
         first = words[0]
         if len(words) > 1:
             rest = ' '.join(words[1:])

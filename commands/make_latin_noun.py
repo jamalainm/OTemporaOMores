@@ -70,7 +70,7 @@ class CmdMakeLatinObject(Command):
     Create a latin object through a dialog
 
     Usage:
-        +create_latin_object <nominative>
+        +latin_object <nominative>
         <confirm nominative>
         <establish genitive>
         <establish gender>
@@ -157,7 +157,7 @@ class CmdMakeLatinCharacter(Command):
     Create a latin object through a dialog
 
     Usage:
-        +create_latin_character <nominative>
+        +latin_character <nominative>
         <confirm nominative>
         <establish genitive>
         <establish gender>

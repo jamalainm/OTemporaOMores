@@ -270,9 +270,9 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
     give away something to someone
 
     Usage:
-      da <rem> <alicui> # give something to someone
+      da <rem> <alicui>
 
-    Gives an items from your inventory to another character,
+    Gives an item from your inventory to another character,
     placing it in their inventory.
     """
 
