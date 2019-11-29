@@ -7,6 +7,7 @@ from evennia.utils import utils, evtable
 from evennia.typeclasses.attributes import NickTemplateInvalid
 
 COMMAND_DEFAULT_CLASS = utils.class_from_module(settings.COMMAND_DEFAULT_CLASS)
+# Added for dealing with multiple objects
 
 # limit symbol import for API
 __all__ = (
@@ -24,6 +25,31 @@ __all__ = (
     "CmdAccess",
 )
 
+def which_one(args,caller):
+    if '-' in args:
+        thing = args.split('-')
+        args = thing[-1].strip().lower()
+        # get the contents of the room
+        everything = caller.location.contents
+        # identify what items are the same AND match the intended case
+        same = []
+        for item in everything:
+            if args in item.aliases.all():
+                same.append(item)
+        # Return feedback if a number higher than the number of matches
+        # was provided
+        if len(same) == 0:
+            caller.msg("Non invenisti!")
+            return None, args
+        if len(same) < int(thing[0]):
+            caller.msg(f"Non sunt {thing[0]}, sed {len(same)}!")
+            return None, args
+        # match the number with the item
+        target = same[int(thing[0])-1]
+        return target, args
+    else:
+        target = caller.search(args)
+        return target, args
 
 class CmdHome(COMMAND_DEFAULT_CLASS):
     """
@@ -80,311 +106,39 @@ class CmdLook(COMMAND_DEFAULT_CLASS):
                 caller.msg("Nihil est quod aspicere potes!")
                 return
         else:
-            target = caller.search(self.args)
+            target, self.args = which_one(self.args,caller)
             if not target:
                 return
-        if self.args.strip != target.db.acc_sg:
+        if self.args.strip().lower() != target.db.acc_sg.lower() and self.args:
             self.msg(f"(Did you mean '{target.db.acc_sg}'?)")
             return
         self.msg((caller.at_look(target), {"type": "look"}), options=None)
-
-
-class CmdNick(COMMAND_DEFAULT_CLASS):
-    """
-    define a personal alias/nick by defining a string to
-    match and replace it with another on the fly
-
-    Usage:
-      nick[/switches] <string> [= [replacement_string]]
-      nick[/switches] <template> = <replacement_template>
-      nick/delete <string> or number
-      nicks
-
-    Switches:
-      inputline - replace on the inputline (default)
-      object    - replace on object-lookup
-      account   - replace on account-lookup
-      list      - show all defined aliases (also "nicks" works)
-      delete    - remove nick by index in /list
-      clearall  - clear all nicks
-
-    Examples:
-      nick hi = say Hello, I'm Sarah!
-      nick/object tom = the tall man
-      nick build $1 $2 = create/drop $1;$2
-      nick tell $1 $2=page $1=$2
-      nick tm?$1=page tallman=$1
-      nick tm\=$1=page tallman=$1
-
-    A 'nick' is a personal string replacement. Use $1, $2, ... to catch arguments.
-    Put the last $-marker without an ending space to catch all remaining text. You
-    can also use unix-glob matching for the left-hand side <string>:
-
-        * - matches everything
-        ? - matches 0 or 1 single characters
-        [abcd] - matches these chars in any order
-        [!abcd] - matches everything not among these chars
-        \= - escape literal '=' you want in your <string>
-
-    Note that no objects are actually renamed or changed by this command - your nicks
-    are only available to you. If you want to permanently add keywords to an object
-    for everyone to use, you need build privileges and the alias command.
-
-    """
-
-    key = "nick"
-    switch_options = ("inputline", "object", "account", "list", "delete", "clearall")
-    aliases = ["nickname", "nicks"]
-    locks = "cmd:all()"
-
-    def parse(self):
-        """
-        Support escaping of = with \=
-        """
-        super(CmdNick, self).parse()
-        args = (self.lhs or "") + (" = %s" % self.rhs if self.rhs else "")
-        parts = re.split(r"(?<!\\)=", args, 1)
-        self.rhs = None
-        if len(parts) < 2:
-            self.lhs = parts[0].strip()
-        else:
-            self.lhs, self.rhs = [part.strip() for part in parts]
-        self.lhs = self.lhs.replace("\=", "=")
-
-    def func(self):
-        """Create the nickname"""
-
-        def _cy(string):
-            "add color to the special markers"
-            return re.sub(r"(\$[0-9]+|\*|\?|\[.+?\])", r"|Y\1|n", string)
-
-        caller = self.caller
-        switches = self.switches
-        nicktypes = [switch for switch in switches if switch in ("object", "account", "inputline")]
-        specified_nicktype = bool(nicktypes)
-        nicktypes = nicktypes if specified_nicktype else ["inputline"]
-
-        nicklist = (
-            utils.make_iter(caller.nicks.get(category="inputline", return_obj=True) or [])
-            + utils.make_iter(caller.nicks.get(category="object", return_obj=True) or [])
-            + utils.make_iter(caller.nicks.get(category="account", return_obj=True) or [])
-        )
-
-        if "list" in switches or self.cmdstring in ("nicks",):
-
-            if not nicklist:
-                string = "|wNo nicks defined.|n"
-            else:
-                table = self.styled_table("#", "Type", "Nick match", "Replacement")
-                for inum, nickobj in enumerate(nicklist):
-                    _, _, nickvalue, replacement = nickobj.value
-                    table.add_row(
-                        str(inum + 1), nickobj.db_category, _cy(nickvalue), _cy(replacement)
-                    )
-                string = "|wDefined Nicks:|n\n%s" % table
-            caller.msg(string)
-            return
-
-        if "clearall" in switches:
-            caller.nicks.clear()
-            caller.account.nicks.clear()
-            caller.msg("Cleared all nicks.")
-            return
-
-        if "delete" in switches or "del" in switches:
-            if not self.args or not self.lhs:
-                caller.msg("usage nick/delete <nick> or <#num> ('nicks' for list)")
-                return
-            # see if a number was given
-            arg = self.args.lstrip("#")
-            oldnicks = []
-            if arg.isdigit():
-                # we are given a index in nicklist
-                delindex = int(arg)
-                if 0 < delindex <= len(nicklist):
-                    oldnicks.append(nicklist[delindex - 1])
-                else:
-                    caller.msg("Not a valid nick index. See 'nicks' for a list.")
-                    return
-            else:
-                if not specified_nicktype:
-                    nicktypes = ("object", "account", "inputline")
-                for nicktype in nicktypes:
-                    oldnicks.append(caller.nicks.get(arg, category=nicktype, return_obj=True))
-
-            oldnicks = [oldnick for oldnick in oldnicks if oldnick]
-            if oldnicks:
-                for oldnick in oldnicks:
-                    nicktype = oldnick.category
-                    nicktypestr = "%s-nick" % nicktype.capitalize()
-                    _, _, old_nickstring, old_replstring = oldnick.value
-                    caller.nicks.remove(old_nickstring, category=nicktype)
-                    caller.msg(
-                        "%s removed: '|w%s|n' -> |w%s|n."
-                        % (nicktypestr, old_nickstring, old_replstring)
-                    )
-            else:
-                caller.msg("No matching nicks to remove.")
-            return
-
-        if not self.rhs and self.lhs:
-            # check what a nick is set to
-            strings = []
-            if not specified_nicktype:
-                nicktypes = ("object", "account", "inputline")
-            for nicktype in nicktypes:
-                nicks = [
-                    nick
-                    for nick in utils.make_iter(
-                        caller.nicks.get(category=nicktype, return_obj=True)
-                    )
-                    if nick
-                ]
-                for nick in nicks:
-                    _, _, nick, repl = nick.value
-                    if nick.startswith(self.lhs):
-                        strings.append(
-                            "{}-nick: '{}' -> '{}'".format(nicktype.capitalize(), nick, repl)
-                        )
-            if strings:
-                caller.msg("\n".join(strings))
-            else:
-                caller.msg("No nicks found matching '{}'".format(self.lhs))
-            return
-
-        if not self.rhs and self.lhs:
-            # check what a nick is set to
-            strings = []
-            if not specified_nicktype:
-                nicktypes = ("object", "account", "inputline")
-            for nicktype in nicktypes:
-                if nicktype == "account":
-                    obj = account
-                else:
-                    obj = caller
-                nicks = utils.make_iter(obj.nicks.get(category=nicktype, return_obj=True))
-                for nick in nicks:
-                    _, _, nick, repl = nick.value
-                    if nick.startswith(self.lhs):
-                        strings.append(
-                            "{}-nick: '{}' -> '{}'".format(nicktype.capitalize(), nick, repl)
-                        )
-            if strings:
-                caller.msg("\n".join(strings))
-            else:
-                caller.msg("No nicks found matching '{}'".format(self.lhs))
-            return
-
-        if not self.rhs and self.lhs:
-            # check what a nick is set to
-            strings = []
-            if not specified_nicktype:
-                nicktypes = ("object", "account", "inputline")
-            for nicktype in nicktypes:
-                if nicktype == "account":
-                    obj = account
-                else:
-                    obj = caller
-                nicks = utils.make_iter(obj.nicks.get(category=nicktype, return_obj=True))
-                for nick in nicks:
-                    _, _, nick, repl = nick.value
-                    if nick.startswith(self.lhs):
-                        strings.append(
-                            "{}-nick: '{}' -> '{}'".format(nicktype.capitalize(), nick, repl)
-                        )
-            if strings:
-                caller.msg("\n".join(strings))
-            else:
-                caller.msg("No nicks found matching '{}'".format(self.lhs))
-            return
-
-        if not self.args or not self.lhs:
-            caller.msg("Usage: nick[/switches] nickname = [realname]")
-            return
-
-        # setting new nicks
-
-        nickstring = self.lhs
-        replstring = self.rhs
-
-        if replstring == nickstring:
-            caller.msg("No point in setting nick same as the string to replace...")
-            return
-
-        # check so we have a suitable nick type
-        errstring = ""
-        string = ""
-        for nicktype in nicktypes:
-            nicktypestr = "%s-nick" % nicktype.capitalize()
-            old_nickstring = None
-            old_replstring = None
-
-            oldnick = caller.nicks.get(key=nickstring, category=nicktype, return_obj=True)
-            if oldnick:
-                _, _, old_nickstring, old_replstring = oldnick.value
-            if replstring:
-                # creating new nick
-                errstring = ""
-                if oldnick:
-                    if replstring == old_replstring:
-                        string += "\nIdentical %s already set." % nicktypestr.lower()
-                    else:
-                        string += "\n%s '|w%s|n' updated to map to '|w%s|n'." % (
-                            nicktypestr,
-                            old_nickstring,
-                            replstring,
-                        )
-                else:
-                    string += "\n%s '|w%s|n' mapped to '|w%s|n'." % (
-                        nicktypestr,
-                        nickstring,
-                        replstring,
-                    )
-                try:
-                    caller.nicks.add(nickstring, replstring, category=nicktype)
-                except NickTemplateInvalid:
-                    caller.msg(
-                        "You must use the same $-markers both in the nick and in the replacement."
-                    )
-                    return
-            elif old_nickstring and old_replstring:
-                # just looking at the nick
-                string += "\n%s '|w%s|n' maps to '|w%s|n'." % (
-                    nicktypestr,
-                    old_nickstring,
-                    old_replstring,
-                )
-                errstring = ""
-        string = errstring if errstring else string
-        caller.msg(_cy(string))
-
 
 class CmdInventory(COMMAND_DEFAULT_CLASS):
     """
     view inventory
 
     Usage:
-      inventory
-      inv
+      habeo
 
     Shows your inventory.
     """
 
-    key = "inventory"
-    aliases = ["inv", "i"]
+    key = "habeo"
     locks = "cmd:all()"
     arg_regex = r"$"
+    help_category = 'Latin'
 
     def func(self):
         """check inventory"""
         items = self.caller.contents
         if not items:
-            string = "You are not carrying anything."
+            string = "Nihil habes."
         else:
             table = self.styled_table(border="header")
             for item in items:
                 table.add_row("|C%s|n" % item.name, item.db.desc or "")
-            string = "|wYou are carrying:\n%s" % table
+            string = "|wEcce:\n%s" % table
         self.caller.msg(string)
 
 
@@ -393,36 +147,50 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
     pick up something
 
     Usage:
-      get <obj>
+      cape <rem>
 
     Picks up an object from your location and puts it in
     your inventory.
     """
 
-    key = "get"
-    aliases = "grab"
+    key = "cape"
     locks = "cmd:all()"
     arg_regex = r"\s|$"
+    help_category = 'Latin'
 
     def func(self):
         """implements the command."""
+        # try to duplicate 'try_num_prefixes' from 'evennia/commands/cmdparser.py'
+        
+        num_ref_match = _MULTIMATCH_REGEX.match(self.args)
+        if num_ref_match:
+            # the user might be trying to identify the command
+            # with a #num-command style syntax. We expect the regex to
+            # contain the groups "number" and "name".
+            mindex, new_raw_string = num_ref_match.group("number"), num_ref_match.group("name")
+            self.args = new_raw_string.strip()
+
+        # all above is the redefinition of 'try_num_prefixes'
 
         caller = self.caller
 
         if not self.args:
-            caller.msg("Get what?")
+            caller.msg("Quid capere velis?")
             return
         obj = caller.search(self.args, location=caller.location)
         if not obj:
             return
+        if obj.db.acc_sg.lower() != self.args.strip().lower():
+            self.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
+            return
         if caller == obj:
-            caller.msg("You can't get yourself.")
+            caller.msg("Tu te capere non potes.")
             return
         if not obj.access(caller, "get"):
             if obj.db.get_err_msg:
                 caller.msg(obj.db.get_err_msg)
             else:
-                caller.msg("You can't get that.")
+                caller.msg(f"Tu {obj.db.acc_sg} capere non potes.")
             return
 
         # calling at_before_get hook method
@@ -430,8 +198,8 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
             return
 
         obj.move_to(caller, quiet=True)
-        caller.msg("You pick up %s." % obj.name)
-        caller.location.msg_contents("%s picks up %s." % (caller.name, obj.name), exclude=caller)
+        caller.msg("%s cepisti." % obj.db.acc_sg)
+        caller.location.msg_contents("%s %s cepit." % (caller.name, obj.db.acc_sg), exclude=caller)
         # calling at_get hook method
         obj.at_get(caller)
 

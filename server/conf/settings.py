@@ -26,6 +26,7 @@ put secret game- or server-specific settings in secret_settings.py.
 
 # Use the defaults from Evennia unless explicitly overridden
 from evennia.settings_default import *
+import os
 
 ######################################################################
 # Evennia base server config
@@ -34,6 +35,7 @@ from evennia.settings_default import *
 # This is the name of your game. Make it catchy!
 SERVERNAME = "O Tempora, O Mores"
 GAME_SLOGAN = "Adventures in Latin"
+#COMMAND_PARSER = "commands.cmdparser"
 TELNET_ENABLED = False
 ALLOWED_HOSTS = ["otemporaomor.es","155.133.131.65"]
 WEBSERVER_PORTS = [(80, 4005)]
