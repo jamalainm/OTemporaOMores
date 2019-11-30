@@ -189,7 +189,12 @@ class LatinNoun(DefaultObject):
         if desc:
             string += "%s" % desc
         if exits:
-            string += "\n|wAd hos locos potes ire:|n\n " + LatinNoun.list_to_string(exits)
+            # Changing this string so that exits appear green
+            # string += "\n|wAd hos locos potes ire:|n\n " + LatinNoun.list_to_string(exits)
+            colorful_exits = []
+            for exit in exits:
+                colorful_exits.append(f"|g{exit}|n")
+            string += "\n|wAd hos locos potes ire:|n\n " + LatinNoun.list_to_string(colorful_exits)
         if users or things:
             # handle pluralization of things (never pluralize users)
             thing_strings = []
