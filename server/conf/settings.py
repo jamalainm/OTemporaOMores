@@ -45,9 +45,6 @@ MULTISESSION_MODE = 2
 MAX_NR_CHARACTERS = 5
 DEBUG = True
 INSTALLED_APPS += ('web.chargen','nocaptcha_recaptcha')
-NORECAPTCHA_SITE_KEY = '6Lc1-8QUAAAAAAeoIIemPrC5xJH5AB14l3zq-mWr'
-NORECAPTCHA_SECRET_KEY = '6Lc1-8QUAAAAAEouvVA5tuNYefT9X_myaO9ZHLoo'
-
 ######################################################################
 # Settings given in secret_settings.py override those in this file.
 ######################################################################
@@ -55,3 +52,10 @@ try:
     from server.conf.secret_settings import *
 except ImportError:
     print("secret_settings.py file not found or failed to import.")
+
+
+try:
+    # Created by the `evennia connections` wizard
+    from .connection_settings import *
+except ImportError:
+    pass
