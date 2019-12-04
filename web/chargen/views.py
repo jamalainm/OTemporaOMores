@@ -3,6 +3,7 @@ from django.shortcuts import render
 
 # Create your views here.
 
+from .choices import *
 from .models import CharApp
 
 def index(request):
@@ -17,8 +18,22 @@ def index(request):
 
 def detail(request, app_id):
     app = CharApp.objects.get(app_id=app_id)
-    name = app.char_name
-    genitive = app.genitive
+    praenomen = app.praenomen
+    gens = app.gens
+    gender = app.gender
+    # This is a mess, since I don't know how to have a
+    # dynamic character creation form where different
+    # names become available based on gender and gens
+    praenomen = PRAENOMINA_CHOICES[int(praenomen) - 1][1]
+    gens = GENTES_CHOICES[int(gens) - 1][1]
+    names = praenomen.split('/')
+    if int(gender) == 2:
+        name - names[1].strip()
+        gens = gens[:-1] + 'us'
+    else:
+        name = names[0].strip()
+    name = name + ' ' + gens
+    # changes made aove this line
     submitted = app.submitted
     p_id = request.user.id
     context = {'name': name, 'genitive': genitive, 
@@ -38,20 +53,34 @@ def creating(request):
     if request.method == 'POST':
         form = AppForm(request.POST)
         if form.is_valid():
-            name = form.cleaned_data['name']
-	    # changed "description" to "genitive" below
-            genitive = form.cleaned_data['genitive']
 	    # Added the following line
             gender = form.cleaned_data['gender']
+            gens = form.cleaned_data['gens']
+            praenomen = form.cleaned_data['praenomen']
             applied_date = datetime.now()
             submitted = True
             if 'save' in request.POST:
                 submitted = False
-            app = CharApp(char_name=name, genitive=genitive,
+            app = CharApp(praenomen=praenomen,gens=gens,gender=gender,
             date_applied=applied_date, account_id=user.id,
             submitted=submitted)
             app.save()
             if submitted:
+                praenomen = PRAENOMINA_CHOICES[int(praenomen) - 1][1]
+                gens = GENTES_CHOICES[int(gens) - 1][1]
+                names = praenomen.split('/')
+                if int(gender) == 2:
+                    name = names[1].strip()
+                else:
+                    name = names[0].strip()
+                if name[-1] == 'a':
+                    genitive = name + 'e'
+                elif name[-2:] == 'us':
+                    genitive = name[:-2] + 'i'
+                elif name[-1] == 'r':
+                    genitive = name + 'is'
+                else:
+                    genitive = name + 'nis'
                 # Create the actual character object
                 typeclass = settings.BASE_CHARACTER_TYPECLASS
                 home = ObjectDB.objects.get_id(settings.GUEST_HOME)
@@ -59,7 +88,7 @@ def creating(request):
                 perms = str(user.permissions)
                 # create the character
                 char = create.create_object(typeclass=typeclass, key=name,
-                    home=home, permissions=perms,attributes=[('gender', gender),('nom_sg', name),('gen_sg', genitive)])
+                    home=home, permissions=perms,attributes=[('gender', gender),('gens', gens),('nom_sg', name),('gen_sg', genitive)])
                 user.db._playable_characters.append(char)
                 # add the right locks for the character so the account can
                 #  puppet it
