@@ -18,6 +18,7 @@ from evennia import default_cmds
 from evennia.contrib.ingame_python.commands import CmdCallback
 from commands import make_latin_noun
 from commands import latin_commands
+from commands import myaccount
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -71,7 +72,7 @@ class AccountCmdSet(default_cmds.AccountCmdSet):
         #
         # any commands you add below will overload the default ones.
         #
-
+        self.add(myaccount.CmdCharCreate())
 
 class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
     """
