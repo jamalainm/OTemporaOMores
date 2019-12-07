@@ -7,8 +7,27 @@
 <!-- changed from "chargen/create/" to "characters/create"-->
 <form action="/characters/create/" method="post">
     {% csrf_token %}
-    {{ form }}
+    <div>
+	    The 'Gens' was the large, familial group to which all natural born Roman citizens belonged. Most people would address you by a name derived from your 'gens.' In Latin, this name was called the 'nomen.'
+    </div>
+    <div>
+    {{ form.gens }}
+    </div>
+    <div>
+	    For purposes of naming, Romans associated all humans with either the male or female genders. There was a third grammatical gender, but Romans did not use it when discussing people.
+    </div>
+    <div>
+	    {{ form.gender }}
+    <div>
+	    The 'Praenomen' was used within clans and more familiar social groups. This is the origin of the concept of a 'first name' in Roman-influenced European cultures.
+    </div>
+    <div>
+	    {{ form.praenomen }}
+    </div>
+    <div>
+	    {{ form.captcha }}
     <input type="submit" name="submit" value="Submit"/>
+    </div>
 </form>
 {% else %}
 <p>You aren't logged in.</p>

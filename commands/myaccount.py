@@ -161,10 +161,10 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
         """create the new character"""
         # This is the top level menu
         account = self.account
-#        if not self.args:
-#            self.msg("Usage: charcreate <charname> [= description]")
-#            return
-#
+        if self.args:
+            self.msg("Usage: despite the directions above, just type 'charcreate' without arguments")
+            return
+
         genders = ['f','m']
         while True:
             answer = yield("Please select a gender: [(F)emale/(M)ale] ")
@@ -218,6 +218,7 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
         ):
             self.msg("You may only create a maximum of %i characters." % charmax)
             return
+        self.msg("About to create a character")
         from evennia.objects.models import ObjectDB
 
         typeclass = settings.BASE_CHARACTER_TYPECLASS

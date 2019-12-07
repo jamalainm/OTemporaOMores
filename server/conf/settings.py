@@ -36,7 +36,9 @@ import os
 SERVERNAME = "O Tempora, O Mores"
 GAME_SLOGAN = "Adventures in Latin"
 #COMMAND_PARSER = "commands.cmdparser"
-TELNET_ENABLED = False
+TELNET_ENABLED = True
+TELNET_PORTS = [4000]
+TELNET_INTERFACES = ["0.0.0.0"]
 ALLOWED_HOSTS = ["otemporaomor.es","155.133.131.65"]
 WEBSERVER_PORTS = [(80, 4005)]
 WEBSERVER_INTERFACES = ["155.133.131.65"]

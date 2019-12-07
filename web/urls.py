@@ -16,7 +16,7 @@ custom_patterns = [
     # connect it with the webpage's link for making new characters
     # changing the below from "chargen" to "characters/" so it'll
     # be available from the account menu
-    url(r'^characters/', include('web.chargen.urls')),
+     url(r'^characters/', include('web.chargen.urls')),
 ]
 
 # this is required by Django.
