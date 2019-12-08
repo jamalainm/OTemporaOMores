@@ -464,7 +464,9 @@ class CmdWear(MuxCommand):
         # clothing = self.caller.search(self.arglist[0], candidates=self.caller.contents)
         stuff = self.caller.contents
         target, self.args = which_one(self.args,self.caller,stuff)
-        clothing = self.caller.search(target, candidates=self.caller.contents)
+        # JI (12/7/19) Going to see about bypassing the following in preference of the above
+        # clothing = self.caller.search(target, candidates=self.caller.contents)
+        clothing = target
         wearstyle = True
         if not clothing:
             # JI (12/7/19) changing to Latin
@@ -545,7 +547,9 @@ class CmdRemove(MuxCommand):
         # clothing = self.caller.search(self.args, candidates=self.caller.contents)
         stuff = self.caller.contents
         target, self.args = which_one(self.args,self.caller,stuff)
-        clothing = self.caller.search(target, candidates=self.caller.contents)
+        # JI (12/7/9) commenting out the below in preference of the above
+        # clothing = self.caller.search(target, candidates=self.caller.contents)
+        clothing = target
         if not clothing:
             # JI (12/7/19) Adapted to Latin
             self.caller.msg("Non geritur.")
