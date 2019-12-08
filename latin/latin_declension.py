@@ -15,6 +15,13 @@ class DeclineNoun:
             return [4, self.gen[:-2]]
         elif self.nom[-2:] == "es":
             return [5, self.gen[:-1]]
+        elif self.gen[-2:] == "um":
+            if self.nom[-2:] == "ae":
+                return [6, self.nom[:-2]]
+            elif self.nom == "i":
+                return [7, self.nom[:-1]]
+            elif self.nom == "a":
+                return [8, self.nom[:-1]]
         else:
             return [2, self.gen[:-1]]
 
@@ -148,6 +155,45 @@ class DeclineNoun:
 
         return forms
 
+    def first_plural(self):
+
+        base = DeclineNoun.id_declension(self)[1]
+
+        endings = ['ae','arum','is','as','is','ae','ae','arum','is','as','is','ae']
+
+        forms = []
+
+        for i in endings:
+            forms.append(base + i)
+
+        return forms
+
+    def second_plural_masc(self):
+
+        base = DenclineNoun.id_declension(self)[1]
+
+        endings = ['i','orum','is','os','is','i','i','orum','is','os','is','i']
+
+        forms = []
+
+        for i in endings:
+            forms.append(base + 1)
+
+        return forms
+
+    def second_plural_neut(self):
+
+        base = DeclineNoun.id_declension(self)[1]
+
+        endings = ['a','orum','is','a','is','a','a','orum','is','a','is','a']
+
+        forms = []
+
+        for i in endings:
+            forms.append(base + 1)
+
+        return forms
+
     def make_paradigm(self):
         
         labels = ['nom_sg','gen_sg','dat_sg','acc_sg','abl_sg','voc_sg','nom_pl','gen_pl','dat_pl','acc_pl','abl_pl','voc_pl']
@@ -162,8 +208,14 @@ class DeclineNoun:
             forms = DeclineNoun.third_declension(self)
         elif DeclineNoun.id_declension(self)[0] == 4:
             forms = DeclineNoun.fourth_declension(self)
-        else:
+        elif DeclineNoun.id_declension(self)[0] == 5:
             forms = DeclineNoun.fifth_declension(self)
+        elif DeclineNoun.id_declension(self)[0] == 6:
+            forms = DeclineNoun.first_plural(self)
+        elif DeclineNoun.id_declension(self)[0] == 7:
+            forms = DeclineNoun.second_plural_masc(self)
+        else:
+            forms = DeclineNoun.second_plural_neut(self)
 
         declension = []
         for index,value in enumerate(labels):

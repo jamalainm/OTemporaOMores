@@ -35,6 +35,35 @@ Possible keywords are:
 See the `@spawn` command and `evennia.utils.spawner` for more info.
 
 """
+HAT = {
+        "key":"petasus",
+        "typeclass": "typeclasses.latin_clothing.Clothing",
+        "location":"#73",
+        "clothing_type":"hat",
+        "nom_sg":"petasus",
+        "gen_sg":"petasi",
+        "gender":"2"
+        }
+
+SANDALS = {
+        "key":"soleae",
+        "typeclass":"typeclasses.latin_clothing.Clothing",
+        "location":"#73",
+        "clothing_type":"shoes",
+        "nom_sg":"soleae",
+        "gen_sg":"solearum",
+        "gender":"1"
+        }
+
+TUNIC = {
+        "key":"tunica",
+        "typeclass":"typeclasses.latin_clothing.Clothing",
+        "location":"#73",
+        "clothing_type":"top",
+        "nom_sg":"tunica",
+        "gen_sg":"tunicae",
+        "gender":"1"
+        }
 
 # from random import randint
 #
