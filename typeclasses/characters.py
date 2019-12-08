@@ -17,6 +17,8 @@ from evennia.utils.utils import inherits_from
 #
 # class Character(DefaultCharacter):
 #
+# Adding next couple of lines to accommodate clothing
+from typeclasses import latin_clothing
 class Character(EventCharacter,LatinNoun):
     """
     The Character defaults to reimplementing some of base Object's hook methods with the
@@ -344,4 +346,60 @@ class Character(EventCharacter,LatinNoun):
             for present in presents:
                 present.callbacks.call("say", self, present, message, parameters=message)
 
+# adding the following to accommodate clothing
 
+    def return_appearance(self, looker, **kwargs):
+        """
+        # Lightly editing to change "You see" to "Ecce"
+        # and 'Exits' to 'Ad hos locos ire potes:'
+        This formats a description. It is the hook a 'look' command
+        should call.
+
+        Args:
+            looker (Object): Object doing the looking.
+            **kwargs (dict): Arbitrary, optional arguments for users
+                overriding the call (unused by default).
+        """
+
+
+        if not looker:
+            return ""
+        # get and identify all objects
+        # JI (12/7/19) Commenting out the following which probably shouldn't apply to characters.
+#        visible = (con for con in self.contents if con != looker and con.access(looker, "view"))
+#        exits, users, things = [], [], defaultdict(list)
+#        for con in visible:
+#            key = con.get_display_name(looker)
+#            if con.destination:
+#                exits.append(key)
+#            elif con.has_account:
+#                users.append("|c%s|n" % key)
+#            else:
+#                # things can be pluralized
+#                things[key].append(con)
+        # get description, build string
+        string = "|c%s|n\n" % self.get_display_name(looker)
+        desc = self.db.desc
+        # JI (12/7/9) Adding the following lines to accommodate clothing
+        worn_string_list = []
+        clothes_list = latin_clothing.get_worn_clothes(self, exclude_covered=True)
+        # Append worn, uncovered clothing to the description
+        for garment in clothes_list:
+            # if 'worn' is True, just append the name
+            if garment.db.worn is True:
+                # JI (12/7/19) append the accusative name to the description,
+                # since these will be direct objects
+                worn_string_list.append(garment.db.acc_sg)
+            # Otherwise, append the name and the string value of 'worn'
+            elif garment.db.worn:
+                worn_string_list.append("%s %s" % (garment.name, garment.db.worn))
+        if desc:
+            string += "%s" % desc
+        # Append worn clothes.
+        if worn_string_list:
+            string += "|/|/%s gerit: %s." % (self, LatinNoun.list_to_string(worn_string_list))
+        else:
+            string += "|/|/%s nud%s est!" % (self, 'a' if self.db.gender == 1 else 'us')
+        return string
+        # Thinking that the above, added for clothing, might need to only be in the
+        # character typeclass

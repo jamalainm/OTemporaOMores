@@ -74,7 +74,9 @@ with which to test the system:
     wear shirt
 
 """
-
+# JI (12/7/19) Adding the following line to change inheritance
+# of new typeclass Clothing
+from typeclasses.objects import Object
 from evennia import DefaultObject
 from evennia import DefaultCharacter
 from evennia import default_cmds
@@ -125,6 +127,54 @@ CLOTHING_TYPE_CANT_COVER_WITH = ["jewelry"]
 
 
 # HELPER FUNCTIONS START HERE
+
+# JI (12/7/19) Adding my own helper function to deal with possibility
+# of multiple objects of the same name
+
+def which_one(args,caller,stuff):
+    if '-' in args:
+        thing = args.split('-')
+        args = thing[-1].strip().lower()
+        # get the contents of the room
+#        everything = stuff
+        # identify what items are the same AND match the intended case
+        same = []
+        for item in stuff:
+            characteristics = item.aliases.all()
+            [x.lower() for x in characteristics]
+            if args in characteristics:
+                same.append(item)
+        # Return feedback if a number higher than the number of matches
+        # was provided
+        if len(same) == 0:
+            caller.msg("Non invenisti!")
+            return None, args
+        if len(same) < int(thing[0]):
+            caller.msg(f"Non sunt {thing[0]}, sed {len(same)}!")
+            return None, args
+        # match the number with the item
+        target = same[int(thing[0])-1]
+        return target, args
+    else:
+        same = []
+        args = args.lower()
+        for item in stuff:
+            characteristics = item.aliases.all()
+            [x.lower() for x in characteristics]
+            if args in characteristics:
+                same.append(item)
+        if len(same) == 0:
+            caller.msg("Non invenisti!")
+            return None, args
+        elif len(same) != 1:
+            caller.msg(f"Sunt {len(same)}. Ecce:")
+            for index,item in enumerate(same):
+                caller.msg(f"{index + 1}-{item}")
+            return None, args
+        else:
+            target = same[0]
+        return target, args
+
 
 
 def order_clothes_list(clothes_list):
@@ -229,8 +279,9 @@ def single_type_count(clothes_list, type):
                 type_count += 1
     return type_count
 
-
-class Clothing(DefaultObject):
+# JI (12/7/19) Inheriting from new object class; maybe that's crazy
+class Clothing(Object):
+# class Clothing(DefaultObject):
     def wear(self, wearer, wearstyle, quiet=False):
         """
         Sets clothes to 'worn' and optionally echoes to the room.
@@ -408,7 +459,12 @@ class CmdWear(MuxCommand):
             # JI (12/17/19) adapting for Latin commands, removing "wear style"
             self.caller.msg("Usage: indue <rem>")
             return
-        clothing = self.caller.search(self.arglist[0], candidates=self.caller.contents)
+        # JI (12/7/19) Commenting out following line, adding my which_one function
+        # and copying the commented out line with self.arglist[0] replaced by target
+        # clothing = self.caller.search(self.arglist[0], candidates=self.caller.contents)
+        stuff = self.caller.contents
+        target, self.args = which_one(self.args,self.caller,stuff)
+        clothing = self.caller.search(target, candidates=self.caller.contents)
         wearstyle = True
         if not clothing:
             # JI (12/7/19) changing to Latin
@@ -483,7 +539,13 @@ class CmdRemove(MuxCommand):
         """
         This performs the actual command.
         """
-        clothing = self.caller.search(self.args, candidates=self.caller.contents)
+        # JI (12/7/19) Like with CmdWear above, adding the which_one function
+        # to deal with Latin issues. Commenting out original and adapting by
+        # changing self.args to target.
+        # clothing = self.caller.search(self.args, candidates=self.caller.contents)
+        stuff = self.caller.contents
+        target, self.args = which_one(self.args,self.caller,stuff)
+        clothing = self.caller.search(target, candidates=self.caller.contents)
         if not clothing:
             # JI (12/7/19) Adapted to Latin
             self.caller.msg("Non geritur.")
@@ -796,6 +858,6 @@ class ClothedCharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdRemove())
 #        self.add(CmdCover())
 #        self.add(CmdUncover())
-        self.add(CmdGive())
-        self.add(CmdDrop())
+#        self.add(CmdGive())
+#        self.add(CmdDrop())
         self.add(CmdInventory())

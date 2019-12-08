@@ -5,6 +5,9 @@ import re
 from django.conf import settings
 from evennia.utils import utils, evtable
 from evennia.typeclasses.attributes import NickTemplateInvalid
+# adding the following for adaptions to commands based on the
+# addition of the clothing module from contrib
+from typeclasses.latin_noun import LatinNoun
 
 COMMAND_DEFAULT_CLASS = utils.class_from_module(settings.COMMAND_DEFAULT_CLASS)
 # Added for dealing with multiple objects
@@ -258,6 +261,10 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
         if not obj.at_before_drop(caller):
             return
 
+        # Adding the following to deal with clothing:
+        if obj.db.worn:
+            obj.remove(caller,quiet=True)
+
         obj.move_to(caller.location, quiet=True)
         caller.msg("%s reliquisti." % (obj.db.acc_sg,)) # You have given X up
         caller.location.msg_contents("%s %s reliquit." % (caller.name, obj.name), exclude=caller)
@@ -321,7 +328,7 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         # make a list of the dative forms of the things outside of the inventory
         datives = []
         for extern in external:
-            if extern:
+            if extern and extern.db.dat_sg:
                 datives.append(extern.db.dat_sg.lower())
 
         # check grammar
@@ -367,6 +374,9 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
             return
 
         # give object
+        # 12/7/19 added to deal with clothing, removes worn clothes
+        if to_give.db.worn:
+            to_give.remove(caller)
         caller.msg("%s %s dedisti." % (to_give.db.acc_sg, target.db.dat_sg))
         to_give.move_to(target, quiet=True)
         target.msg("%s %s tibi dedit." % (caller.key, to_give.db.acc_sg))

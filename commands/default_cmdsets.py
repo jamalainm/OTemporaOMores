@@ -19,7 +19,8 @@ from evennia.contrib.ingame_python.commands import CmdCallback
 from commands import make_latin_noun
 from commands import latin_commands
 from commands import myaccount
-
+# Adding the following to give clothing functionality
+from typeclasses.latin_clothing import ClothedCharacterCmdSet
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
     """
@@ -47,11 +48,13 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(make_latin_noun.CmdMakeLatinCharacter())
         self.add(make_latin_noun.CmdMakeLatinRoom())
         self.add(latin_commands.CmdLook())
-        self.add(latin_commands.CmdInventory())
+        # Using new Clothing inventory command
+        # self.add(latin_commands.CmdInventory())
         self.add(latin_commands.CmdGet())
         self.add(latin_commands.CmdDrop())
         self.add(latin_commands.CmdSay())
         self.add(latin_commands.CmdGive())
+        self.add(ClothedCharacterCmdSet())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):

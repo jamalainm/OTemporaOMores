@@ -186,8 +186,31 @@ class LatinNoun(DefaultObject):
         # get description, build string
         string = "|c%s|n\n" % self.get_display_name(looker)
         desc = self.db.desc
-        if desc:
-            string += "%s" % desc
+        # JI (12/7/9) Adding the following lines to accommodate clothing
+        # Actually, added return_appearance to characters typeclass
+        # and commenting this new section out
+#        worn_string_list = []
+#        clothes_list = get_worn_clothes(self, exclude_covered=True)
+#        # Append worn, uncovered clothing to the description
+#        for garment in clothes_list:
+#            # if 'worn' is True, just append the name
+#            if garment.db.worn is True:
+#                # JI (12/7/19) append the accusative name to the description,
+#                # since these will be direct objects
+#                worn_string_list.append(garment.db.acc_sg)
+#            # Otherwise, append the name and the string value of 'worn'
+#            elif garment.db.worn:
+#                worn_string_list.append("%s %s" % (garment.name, garment.db.worn))
+#        if desc:
+#            string += "%s" % desc
+#        # Append worn clothes.
+#        if worn_string_list:
+#            string += "|/|/%s gerit: %s." % (self, list_to_string(worn_string_list))
+#        else:
+#            string += "|/|/%s nud%s est!" % (self, 'a' if self.db.gender == 1 else 'us')
+#        return string
+        # Thinking that the above, added for clothing, might need to only be in the
+        # character typeclass
         if exits:
             # Changing this string so that exits appear green
             # string += "\n|wAd hos locos potes ire:|n\n " + LatinNoun.list_to_string(exits)
