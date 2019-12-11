@@ -424,6 +424,7 @@ class CmdSay(COMMAND_DEFAULT_CLASS):
     key = "dic"
     aliases = ['"', "'"]
     locks = "cmd:all()"
+    help_category = "Latin"
 
     def func(self):
         """Run the say command"""

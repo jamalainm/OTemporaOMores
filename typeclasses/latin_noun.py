@@ -201,8 +201,8 @@ class LatinNoun(DefaultObject):
 #            # Otherwise, append the name and the string value of 'worn'
 #            elif garment.db.worn:
 #                worn_string_list.append("%s %s" % (garment.name, garment.db.worn))
-#        if desc:
-#            string += "%s" % desc
+        if desc:
+            string += "%s" % desc
 #        # Append worn clothes.
 #        if worn_string_list:
 #            string += "|/|/%s gerit: %s." % (self, list_to_string(worn_string_list))

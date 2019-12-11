@@ -123,7 +123,7 @@ PRAENOMINA_CHOICES = [
     (8,'Gnaea / Gnaeus'),
     (9,'Hosta / Hostus'),
     (10,'Lucia / Lucius'),
-    (11,'Mamaerca / Mamercus'),
+    (11,'Mamerca / Mamercus'),
     (12,'Mania / Manius'),
     (13,'Marcia / Marcus'),
     (14,'Mettia / Mettius'),

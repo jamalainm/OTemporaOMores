@@ -35,6 +35,45 @@ Possible keywords are:
 See the `@spawn` command and `evennia.utils.spawner` for more info.
 
 """
+BANDEAU = {
+        "key":"strophium",
+        "typeclass":"typeclasses.latin_clothing.Clothing",
+        "nom_sg":"strophium",
+        "gen_sg":"strophii",
+        "gender":"3",
+        "desc":"A bandeau",
+        "clothing_type":"undershirt"
+        }
+
+UNDERWEAR = {
+        "key":"subligaculum",
+        "typeclass":"typeclasses.latin_clothing.Clothing",
+        "nom_sg":"subligaculum",
+        "gen_sg":"subligaculi",
+        "gender":"3",
+        "desc":"briefs",
+        "clothing_type":"underpants"
+        }
+
+WOOL = {
+        "key":"lana",
+        "typeclass":"typeclasses.objects.Object",
+        "location":"#73",
+        "nom_sg":"lana",
+        "gen_sg":"lanae",
+        "gender":"1",
+        "desc":"A pile of undyed wool"
+        }
+CLOAK = {
+        "key":"pallium",
+        "typeclass":"typeclasses.latin_clothing.Clothing",
+        "location":"#90",
+        "clothing_type":"cloak",
+        "nom_sg":"pallium",
+        "gen_sg":"pallii",
+        "gender":"3",
+        "desc":"A simple, well-woven cloth, to wrap about your top"
+        }
 HAT = {
         "key":"petasus",
         "typeclass": "typeclasses.latin_clothing.Clothing",
@@ -42,7 +81,8 @@ HAT = {
         "clothing_type":"hat",
         "nom_sg":"petasus",
         "gen_sg":"petasi",
-        "gender":"2"
+        "gender":"2",
+        "desc":"A broad-brimmed, traveler's hat"
         }
 
 SANDALS = {
@@ -52,17 +92,19 @@ SANDALS = {
         "clothing_type":"shoes",
         "nom_sg":"soleae",
         "gen_sg":"solearum",
-        "gender":"1"
+        "gender":"1",
+        "desc":"A pair of simple sandals"
         }
 
 TUNIC = {
         "key":"tunica",
         "typeclass":"typeclasses.latin_clothing.Clothing",
         "location":"#73",
-        "clothing_type":"top",
+        "clothing_type":"fullbody",
         "nom_sg":"tunica",
         "gen_sg":"tunicae",
-        "gender":"1"
+        "gender":"1",
+        "desc":"A sleeveless, knee-length tunic"
         }
 
 # from random import randint

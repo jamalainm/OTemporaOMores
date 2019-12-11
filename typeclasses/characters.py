@@ -19,6 +19,8 @@ from evennia.utils.utils import inherits_from
 #
 # Adding next couple of lines to accommodate clothing
 from typeclasses import latin_clothing
+# Adding so that some item is created with characters
+from evennia.utils.create import create_object
 class Character(EventCharacter,LatinNoun):
     """
     The Character defaults to reimplementing some of base Object's hook methods with the
@@ -64,6 +66,23 @@ class Character(EventCharacter,LatinNoun):
             self.aliases.add(form[1])
 
         self.tags.add('latin')
+
+        # Add the following so players start with clothes
+        underwear = create_object(
+                typeclass = "typeclasses.latin_clothing.Clothing",
+                key = "subligaculum",
+                location = self.dbref,
+                attributes=[('gender','3'),('clothing_type','underpants'),('nom_sg','subligaculum'),('gen_sg','subligaculi'),('worn',True),('desc','Briefs')]
+                )
+
+        if int(self.db.gender) == 1:
+            bandeau = create_object(
+                    typeclass = "typeclasses.latin_clothing.Clothing",
+                    key = "subligaculum",
+                    location = self.dbref,
+                    attributes=[('gender','3'),('clothing_type','undershirt'),('nom_sg','strophium'),('gen_sg','strophii'),('worn',True),('desc','A bandeau')]
+                    )
+
 
     def announce_move_from(self, destination, msg=None, mapping=None):
         """

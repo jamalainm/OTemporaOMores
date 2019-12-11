@@ -81,7 +81,9 @@ from evennia import DefaultObject
 from evennia import DefaultCharacter
 from evennia import default_cmds
 from evennia.commands.default.muxcommand import MuxCommand
-from evennia.utils import list_to_string
+# swapping out the following for my own
+# from evennia.utils import list_to_string
+from typeclasses.latin_noun import LatinNoun
 from evennia.utils import evtable
 
 # Options start here.
@@ -97,6 +99,7 @@ WEARSTYLE_MAXLENGTH = 50
 # with a type not given in this list goes last.
 CLOTHING_TYPE_ORDER = [
     "hat",
+    "cloak",
     "jewelry",
     "top",
     "undershirt",
@@ -109,7 +112,7 @@ CLOTHING_TYPE_ORDER = [
     "accessory",
 ]
 # The maximum number of each type of clothes that can be worn. Unlimited if untyped or not specified.
-CLOTHING_TYPE_LIMIT = {"hat": 1, "gloves": 1, "socks": 1, "shoes": 1}
+CLOTHING_TYPE_LIMIT = {"hat": 1, "gloves": 1, "socks": 1, "shoes": 1, "cloak": 1, "undershirt": 1, "bottom": 1, "underpants": 1}
 # The maximum number of clothing items that can be worn, or None for unlimited.
 CLOTHING_OVERALL_LIMIT = 20
 # What types of clothes will automatically cover what other types of clothes when worn.
@@ -327,9 +330,9 @@ class Clothing(Object):
             message = "%s wears %s %s" % (wearer, self.name, wearstyle)
         if to_cover:
             # JI (12/7/19) Translated message for covering something
-            message = message + " %s tect%s" % (list_to_string(to_cover_ablative), 'is' if len(to_cover) > 1 else 'a' if to_cover[0].db.gender == 1 else 'o')
+            message = message + ", %s tect%s" % (LatinNoun.list_to_string(to_cover_ablative), 'is' if len(to_cover) > 1 else 'a' if to_cover[0].db.gender == 1 else 'o')
         wearer.location.msg_contents(message + ".", exclude=wearer)
-        wearer.msg(f"{self.db.acc_sg} induis.")
+        wearer.msg(f"{self.db.acc_sg} induisti.")
 
     def remove(self, wearer, quiet=False):
         """
@@ -353,7 +356,8 @@ class Clothing(Object):
             # If anything is covered by
             if thing.db.covered_by == self:
                 thing.db.covered_by = False
-                uncovered_list.append(thing.name)
+                # JI (12/9/19) changing the following from thing.name to thing
+                uncovered_list.append(thing)
                 # JI (12/7/19) Add to list of ablative forms
                 uncovered_list_ablative.append(thing.db.abl_sg)
         if len(uncovered_list) > 0:
@@ -362,14 +366,14 @@ class Clothing(Object):
                 wearer,
                 self.db.acc_sg,
                 # JI (12/7/19) changed list to ablative forms
-                list_to_string(uncovered_list_ablative),
+                LatinNoun.list_to_string(uncovered_list_ablative),
                 # JI (12/7/19) select the proper ending for "having been revealed"
-                'is' if len(uncovered_list > 1) else 'a' if uncovered_list[0].db.gender == 1 else 'o',
+                'is' if len(uncovered_list) > 1 else 'a' if uncovered_list[0].db.gender == 1 else 'o',
             )
         # Echo a message to the room
         if not quiet:
             wearer.location.msg_contents(remove_message, exclude=wearer)
-            wearer.msg(f"{self.db.acc_sg} exuis.")
+            wearer.msg(f"{self.db.acc_sg} exuisti.")
 
     def at_get(self, getter):
         """
@@ -423,7 +427,7 @@ class ClothedCharacter(DefaultCharacter):
             string += "%s" % desc
         # Append worn clothes.
         if worn_string_list:
-            string += "|/|/%s gerit: %s." % (self, list_to_string(worn_string_list))
+            string += "|/|/%s gerit: %s." % (self, LatinNoun.list_to_string(worn_string_list))
         else:
             string += "|/|/%s nud%s est!" % (self, 'a' if self.db.gender == 1 else 'us')
         return string
