@@ -184,3 +184,10 @@ class Object(EventObject,LatinNoun):
             self.aliases.add(form[1])
 
         self.tags.add('latin')
+
+# Trying to make something that could be an object players can put other objects in and take objects out of. Maybe just add a "can_hold" tag to something; no need for a brand new typeclass
+#
+#class Container(Object):
+#
+#    self.db.can_hold = True
+#

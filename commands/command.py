@@ -186,3 +186,44 @@ class Command(BaseCommand):
 #                 self.character = self.caller.get_puppet(self.session)
 #             else:
 #                 self.character = None
+class CmdNPC(Command):
+    """
+    controls an NPC
+
+    Usage:
+        +npc <name> = <command>
+
+    This causes the npc to perform a command as itself. It will do so
+    with its own permissions and accesses.
+    """
+    key = "+npc"
+    locks = "call:not perm(nonpcs)"
+    help_category = "mush"
+
+    def parse(self):
+        "Simple split on the = sign"
+        name, cmdname = None, None
+        if "=" in self.args:
+            name, cmdname = [part.strip()
+                    for part in self.args.rsplit("=", 1)]
+
+            self.name, self.cmdname = name, cmdname
+        else:
+            self.caller.msg("Usage: +npc <name> = <command>")
+            return
+
+    def func(self):
+        "Run the command"
+        caller = self.caller
+        if not self.cmdname:
+            caller.msg("Usage: +npc <name> = <command>")
+            return
+        npc = caller.search(self.name)
+        if not npc:
+            return
+        if not npc.access(caller, "edit"):
+            caller.msg("You may not order this NPC to do anything.")
+            return
+        # send the command order
+        npc.execute_cmd(self.cmdname)
+        caller.msg("You told %s to do '%s'." % (npc.key, self.cmdname))

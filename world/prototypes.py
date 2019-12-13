@@ -35,6 +35,16 @@ Possible keywords are:
 See the `@spawn` command and `evennia.utils.spawner` for more info.
 
 """
+BAG = {
+        "key":"saccus",
+        "typeclass":"typeclasses.latin_clothing.Clothing",
+        "nom_sg":"saccus",
+        "gen_sg":"sacci",
+        "gender":"2",
+        "desc":"A bag",
+        "clothing_teype":"back",
+        "can_hold":True
+        }
 BANDEAU = {
         "key":"strophium",
         "typeclass":"typeclasses.latin_clothing.Clothing",

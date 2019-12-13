@@ -569,3 +569,209 @@ class CmdAccess(COMMAND_DEFAULT_CLASS):
         if hasattr(caller, "account"):
             string += "\nAccount |c%s|n: %s" % (caller.account.key, pperms)
         caller.msg(string)
+
+class CmdPut(COMMAND_DEFAULT_CLASS):
+    """
+    Put one thing in possession in another thing in possession or room.
+
+    Usage:
+      pone <rem> in <rem>
+
+    Store things in containers
+    """
+
+    key = "pone"
+    locks = "cmd:all()"
+    help_category = "Latin"
+
+    def func(self):
+        """Run the say command"""
+
+        caller = self.caller
+
+        if not self.args:
+            caller.msg("Usage: pone <rem> in <rem>")
+            return
+
+        arguments = self.args.split(' ')
+        for index,argument in enumerate(arguments):
+            arguments[index] = argument.strip()
+        if 'in' not in arguments:
+            caller.msg("Usage: pone <rem> in <rem>")
+            return
+
+        if len(arguments) != 3:
+            caller.msg("Usage: pone <rem> in <rem>")
+            return
+
+        if arguments[2] == 'in':
+            caller.msg("Usage: pone <rem> in <rem>")
+            return
+
+        if arguments[1] == 'in':
+            destination = arguments[2]
+            to_store = arguments[0]
+        else:
+            destination = arguments[1]
+            to_store = arguments[2]
+
+#        caller.msg(f"(to_store: {to_store}; destination = {destination})")
+
+        stuff = caller.location.contents + caller.contents
+        intended_container, destination = which_one(destination,caller,stuff)
+#        self.msg(f"Intended_container: {intended_container}")
+        if not intended_container:
+            return
+        if not intended_container.db.can_hold:
+            caller.msg(f"{intended_container.db.nom_sg} nihil tenere potest")
+            return
+
+        if destination.lower() != intended_container.db.acc_sg.lower():
+            caller.msg(f"(Did you mean 'in {intended_container.db.acc_sg}'?)")
+            return
+
+        stuff = caller.contents
+        intended_to_store, to_store = which_one(to_store,caller,stuff)
+#        self.msg(f"intended_to_store: {intended_to_store}")
+        if not intended_to_store:
+            return
+        if to_store != intended_to_store.db.acc_sg:
+            caller.msg(f"(Did you mean '{intended_to_store.db.acc_sg}'?)")
+            return
+
+        if intended_to_store.db.worn:
+            caller.msg(f"Prius necesse est {intended_to_store.db.acc_sg} exuere!")
+            return
+        if intended_to_store.dbref == intended_container.dbref:
+            caller.msg(f"{intended_to_store.db.nom_sg} in se poni non potest!")
+            return
+
+        caller.msg("%s in %s posuisti." % (intended_to_store.db.acc_sg, intended_container.db.acc_sg))
+        intended_to_store.move_to(intended_container, quiet=True)
+        caller.location.msg_contents("%s %s in %s posuit." % (caller.db.nom_sg, intended_to_store.db.acc_sg, intended_container.db.acc_sg),exclude=caller)
+
+class CmdGetOut(COMMAND_DEFAULT_CLASS):
+    """
+    Move an object from a location in the caller's vicinity into the caller's inventory.
+
+    Usage:
+      excipe <rem> ex <re>
+
+    Take something out of something else
+    """
+
+    key = "excipe"
+    locks = "cmd:all()"
+    help_category = "Latin"
+
+    def func(self):
+        """Run the say command"""
+
+        caller = self.caller
+
+        if not self.args:
+            caller.msg("Usage: excipe <rem> ex <re>")
+            return
+
+        arguments = self.args.split(' ')
+        for index,argument in enumerate(arguments):
+            arguments[index] = argument.strip()
+        if 'ex' not in arguments:
+            caller.msg("Usage: excipe <rem> ex <re>")
+            return
+
+        if len(arguments) != 3:
+            caller.msg("Usage: excipe <rem> ex <re>")
+            return
+
+        if arguments[2] == 'ex':
+            caller.msg("Usage: excipe <rem> ex <re>")
+            return
+
+        if arguments[1] == 'ex':
+            source_arg = arguments[2]
+            get_arg = arguments[0]
+        else:
+            source_arg = arguments[1]
+            get_arg = arguments[2]
+
+#        caller.msg(f"(to_store: {to_store}; destination = {destination})")
+
+        stuff = caller.location.contents + caller.contents
+        intended_source, source_arg = which_one(source_arg,caller,stuff)
+#        self.msg(f"Intended_source: {intended_source}")
+        if not intended_source:
+            return
+        if not intended_source.db.can_hold:
+            caller.msg(f"{indended_container.db.nom_sg} nihil tenere potest")
+            return
+
+        if source_arg.lower() != intended_source.db.abl_sg.lower():
+            caller.msg(f"(Did you mean 'ex {inteded_source.db.abl_sg}'?)")
+            return
+
+        stuff = intended_source.contents
+        intended_get, get_arg = which_one(get_arg,caller,stuff)
+#        self.msg(f"intended_get: {intended_get}")
+        if not intended_get:
+            return
+        if get_arg != intended_get.db.acc_sg:
+            caller.msg(f"(Did you mean '{intended_get.db.acc_sg}'?)")
+            return
+
+        caller.msg("%s ex %s excepisti." % (intended_get.db.acc_sg, intended_source.db.abl_sg))
+        intended_get.move_to(caller, quiet=True)
+        caller.location.msg_contents("%s %s ex %s excepit." % (caller.db.nom_sg, intended_get.db.acc_sg, intended_source.db.abl_sg),exclude=caller)
+
+class CmdLookIn(COMMAND_DEFAULT_CLASS):
+    """
+    look inside a container
+
+    Usage:
+      inspice in <rem>
+
+    Observes your location or objects in your vicinity.
+    """
+
+    key = "inspice"
+    locks = "cmd:all()"
+    help_category = 'Latin'
+
+    def func(self):
+        """
+        Handle the looking.
+        """
+        caller = self.caller
+        if not self.args:
+            caller.msg("Usage: inspice in <rem>")
+            return
+        
+        self.args = self.args.split(' ')
+        for index,arg in enumerate(self.args):
+            self.args[index] = arg.strip()
+
+        if len(self.args) != 2 or self.args[0] != 'in':
+            caller.msg("Usage: inspice in <rem>")
+            return
+
+        else:
+            self.args = self.args[1]
+            stuff = caller.location.contents + caller.contents
+            target, self.args = which_one(self.args,caller,stuff)
+            if not target:
+                return
+        if not target.db.can_hold:
+            caller.msg(f"{target.db.nom_sg} nihil tenere potest!")
+        if self.args.strip().lower() != target.db.acc_sg.lower() and self.args:
+            self.msg(f"(Did you mean '{target.db.acc_sg}'?)")
+            return
+
+        items = target.contents
+        if not items:
+            string = "Nihil habet."
+        else:
+            table = self.styled_table(border="header")
+            for item in items:
+                table.add_row("|C%s|n" % item.name, item.db.desc or "")
+            string = "|wEcce:\n%s" % table
+        self.caller.msg(string)
