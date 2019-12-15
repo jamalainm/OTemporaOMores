@@ -61,7 +61,7 @@ UNDERWEAR = {
         "nom_sg":"subligaculum",
         "gen_sg":"subligaculi",
         "gender":"3",
-        "desc":"briefs",
+        "desc":"Briefs",
         "clothing_type":"underpants"
         }
 

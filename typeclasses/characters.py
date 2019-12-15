@@ -92,7 +92,7 @@ class Character(EventCharacter,LatinNoun):
         if int(self.db.gender) == 1:
             bandeau = create_object(
                     typeclass = "typeclasses.latin_clothing.Clothing",
-                    key = "subligaculum",
+                    key = "strophium",
                     location = self.dbref,
                     attributes=[('gender','3'),('clothing_type','undershirt'),('nom_sg','strophium'),('gen_sg','strophii'),('worn',True),('desc','A bandeau')]
                     )
@@ -431,7 +431,7 @@ class Character(EventCharacter,LatinNoun):
         held_list = []
         for possession in possessions:
             if possession.db.held:
-                held_list.append(possession)
+                held_list.append(possession.db.acc_sg)
         if desc:
             string += "%s" % desc
         # Append held items.

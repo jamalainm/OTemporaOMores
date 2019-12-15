@@ -165,11 +165,22 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
             self.msg("Usage: despite the directions above, just type 'charcreate' without arguments")
             return
 
+        charmax = _MAX_NR_CHARACTERS
+
+        if not account.is_superuser and (
+            account.db._playable_characters and len(account.db._playable_characters) >= charmax
+        ):
+            self.msg("You may only create a maximum of %i characters." % charmax)
+            return
+        self.msg("About to create a character")
+        from evennia.objects.models import ObjectDB
+
+
         genders = ['f','m']
         while True:
             answer = yield("Please select a gender: [(F)emale/(M)ale] ")
-            if answer.strip().lower() in genders:
-                self.msg(answer)
+            answer = answer.strip().lower()
+            if answer.lower() in genders:
                 self.gender = int(genders.index(answer) + 1)
                 break
             else:
@@ -212,15 +223,8 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
             self.genitive = self.praenomen[:-2] + 'i'
         else:
             self.genitive = self.praenomen + 'nis'
+        self.msg("Assigned genitive form")
         
-        if not account.is_superuser and (
-            account.db._playable_characters and len(account.db._playable_characters) >= charmax
-        ):
-            self.msg("You may only create a maximum of %i characters." % charmax)
-            return
-        self.msg("About to create a character")
-        from evennia.objects.models import ObjectDB
-
         typeclass = settings.BASE_CHARACTER_TYPECLASS
 
         if ObjectDB.objects.filter(db_typeclass_path=typeclass, db_key__iexact=self.praenomen):
@@ -234,7 +238,6 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
         start_location = ObjectDB.objects.get_id(settings.START_LOCATION)
         default_home = ObjectDB.objects.get_id(settings.DEFAULT_HOME)
         permissions = settings.PERMISSION_ACCOUNT_DEFAULT
-        self.msg("About to make a new character!")
         new_character = create.create_object(
             typeclass, key=self.praenomen, location=start_location, home=default_home, permissions=permissions,attributes=[('gens',self.gens),('gender',self.gender),('nom_sg',self.praenomen),('gen_sg',self.genitive)]
         )
@@ -246,7 +249,7 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
         account.db._playable_characters.append(new_character)
         if desc:
             new_character.db.desc = desc
-        elif not new_character.db.desc:
+        else:
             new_character.db.desc = "This is a character."
         self.msg(
             "Created new character %s. Use |wic %s|n to enter the game as this character."

@@ -54,7 +54,7 @@ class DeclineNoun:
         elif base[-1] == 'i':
             forms[5] = base[:-1] + 'i'
 
-        if self.gender == 3:
+        if int(self.gender) == 3:
             forms[3] = self.nom
             forms[5] = self.nom
             forms[6] = base + 'a'
@@ -98,7 +98,7 @@ class DeclineNoun:
 
             forms[7] = forms[7][:-2] + 'i' + forms[7][-2:]
 
-        if self.gender == 3:
+        if int(self.gender) == 3:
             forms[5] = self.nom
             forms[3] = self.nom
             forms[6] = base + 'a'
@@ -124,7 +124,7 @@ class DeclineNoun:
         for i in endings:
             forms.append(base + i)
 
-        if self.gender == 3:
+        if int(self.gender) == 3:
             forms[3] = self.nom
             forms[2] = base + 'u'
             forms[5] = self.nom
