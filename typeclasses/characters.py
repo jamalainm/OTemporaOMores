@@ -426,8 +426,17 @@ class Character(EventCharacter,LatinNoun):
             # Otherwise, append the name and the string value of 'worn'
             elif garment.db.worn:
                 worn_string_list.append("%s %s" % (garment.name, garment.db.worn))
+        # get held clothes
+        possessions = self.contents
+        held_list = []
+        for possession in possessions:
+            if possession.db.held:
+                held_list.append(possession)
         if desc:
             string += "%s" % desc
+        # Append held items.
+        if held_list:
+            string += "|/|/%s tenet: %s." % (self, LatinNoun.list_to_string(held_list))
         # Append worn clothes.
         if worn_string_list:
             string += "|/|/%s gerit: %s." % (self, LatinNoun.list_to_string(worn_string_list))

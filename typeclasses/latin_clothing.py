@@ -857,10 +857,10 @@ class CmdInventory(MuxCommand):
         wear_table = evtable.EvTable(border="header")
         for item in items:
             if not item.db.worn:
-                carry_table.add_row("|C%s|n" % item.db.acc_sg, item.db.desc or "")
+                carry_table.add_row("|C%s|n" % item.db.acc_sg, '(dextra)' if item.db.held == 'right' else '(sinistra)', item.db.desc or "")
         if carry_table.nrows == 0:
             carry_table.add_row("|CNihil.|n", "")
-        string = "|wHabes:\n%s" % carry_table
+        string = "|wTenes:\n%s" % carry_table
         for item in items:
             if item.db.worn:
                 wear_table.add_row("|C%s|n" % item.db.acc_sg, item.db.desc or "")
