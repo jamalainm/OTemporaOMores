@@ -858,3 +858,110 @@ class CmdLookIn(COMMAND_DEFAULT_CLASS):
                 table.add_row("|C%s|n" % item.name, item.db.desc or "")
             string = "|wEcce:\n%s" % table
         self.caller.msg(string)
+
+class CmdHold(COMMAND_DEFAULT_CLASS):
+    """
+    Hold something in a particular hand
+
+    Usage:
+      tene <rem> <dextra>/<sinistra>
+
+    Hold something in a particular hand.
+    """
+
+    key = "tene"
+    locks = "cmd:all()"
+    arg_regex = r"\s|$"
+    help_category = 'Latin'
+
+    def func(self):
+        """implements the command."""
+        # try to duplicate 'try_num_prefixes' from 'evennia/commands/cmdparser.py'
+        
+        caller = self.caller
+
+        if not self.args:
+            caller.msg("Quid capere velis?")
+            return
+        self.args = self.args.split(" ")
+        for index,arg in enumerate(self.args):
+            self.args[index] = arg.strip()
+        if len(self.args) != 2:
+            caller.msg("Usage: tene <rem> <dextra>/<sinistra>")
+            return
+
+        # Check to see if hands are free
+
+        possessions = caller.contents
+        hands = ['left','right']
+        full_hands = 0
+        held_items = []
+        for possession in possessions:
+            if possession.db.held:
+                if possession.db.held in hands:
+                    full_hands += 1
+                    held_items.append(possession)
+                elif held == 'both':
+                    full_hands += 2
+                    held_items.append(possession)
+
+        if full_hands >= 2:
+            caller.msg("Manus tuae sunt plenae!")
+            return
+
+        # See which hand(s) is/are free
+
+        if 'sinistra' not in self.args and 'dextra' not in self.args:
+            caller.msg("Usage: tene <rem> <dextra>/<sinistra>")
+            return
+        if 'sinistra' in self.args:
+            in_hand = 'left'
+            self.args.remove('sinistra')
+        else:
+            in_hand = 'right'
+            self.args.remove('dextra')
+
+        self.args = self.args[0]
+        
+        stuff = caller.location.contents + caller.contents
+        obj, self.args = which_one(self.args,caller,stuff)
+        if not obj:
+            return
+        if obj.db.acc_sg.lower() != self.args.strip().lower():
+            self.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
+            return
+        if caller == obj:
+            caller.msg("Tu te tenere non potes.")
+            return
+        if not obj.access(caller, "get"):
+            if obj.db.get_err_msg:
+                caller.msg(obj.db.get_err_msg)
+            else:
+                caller.msg(f"Tu {obj.db.acc_sg} tenere non potes.")
+            return
+
+        # See if specificed hand is free
+
+        if held_items:
+            hands.remove(held_items[0].db.held)
+            obj.db.held = hands[0]
+
+        if in_hand not in hands:
+            caller.msg("Illa manus iam est plena!")
+            return
+
+        if obj in caller.contents:
+            if obj.db.worn or obj.db.held:
+                obj.db.worn = False
+                obj.db.held = in_hand
+        else:
+            # calling at_before_get hook method
+            if not obj.at_before_get(caller):
+                return
+            obj.move_to(caller, quiet=True)
+            
+        caller.msg("%s tenes." % obj.db.acc_sg)
+        caller.location.msg_contents("%s %s tenet." % (caller.name, obj.db.acc_sg), exclude=caller)
+        # calling at_get hook method
+        obj.at_get(caller)
+

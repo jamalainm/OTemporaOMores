@@ -60,6 +60,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(latin_commands.CmdPut())
         self.add(latin_commands.CmdGetOut())
         self.add(latin_commands.CmdLookIn())
+        self.add(latin_commands.CmdHold())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):
