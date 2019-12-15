@@ -13,6 +13,8 @@ from latin.latin_declension import DeclineNoun
 from typeclasses.latin_noun import LatinNoun
 # adding next line for new at_say for the EventCharcter class
 from evennia.utils.utils import inherits_from
+# added to assign handedness
+import random
 # Commenting out and replacing DefaultCharacter so we can use ingame python
 #
 # class Character(DefaultCharacter):
@@ -66,6 +68,18 @@ class Character(EventCharacter,LatinNoun):
             self.aliases.add(form[1])
 
         self.tags.add('latin')
+
+        # assign handedness
+
+        if random.random() >= 0.9:
+            self.db.handedness = 'left'
+        else:
+            self.db.handedness = 'right'
+
+        # set hands as empty
+
+        self.db.right_hand = False
+        self.db.left_hand = False
 
         # Add the following so players start with clothes
         underwear = create_object(

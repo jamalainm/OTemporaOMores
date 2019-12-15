@@ -206,6 +206,25 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
                 caller.msg(f"Tu {obj.db.acc_sg} capere non potes.")
             return
 
+        # Check to see if hands are free
+
+        possessions = caller.contents
+        hands = ['left','right']
+        full_hands = 0
+        held_items = []
+        for possession in possessions:
+            if possession.db.held:
+                if possession.db.held in hands:
+                    full_hands += 1
+                    held_items.append(possession)
+                elif held == 'both':
+                    full_hands += 2
+                    held_items.append(possession)
+
+        if full_hands >= 2:
+            caller.msg("Manus tuae sunt plenae!")
+            return
+
         # calling at_before_get hook method
         if not obj.at_before_get(caller):
             return
@@ -215,6 +234,14 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
         caller.location.msg_contents("%s %s cepit." % (caller.name, obj.db.acc_sg), exclude=caller)
         # calling at_get hook method
         obj.at_get(caller)
+
+        # Put the object in a hand; dominant if not already full
+
+        if held_items:
+            hands.remove(held_items[0].db.held)
+            obj.db.held = hands[0]
+        else:
+            obj.db.held = caller.db.handedness
 
 
 class CmdDrop(COMMAND_DEFAULT_CLASS):
@@ -262,6 +289,8 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
             return
 
         # Adding the following to deal with clothing:
+        if obj.db.held:
+            obj.db.held = False
         if obj.db.worn:
             obj.remove(caller,quiet=True)
 
@@ -373,6 +402,25 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         if not to_give.at_before_give(caller, target):
             return
 
+        # Check if target's hands are full
+
+        possessions = target.contents
+        hands = ['left','right']
+        full_hands = 0
+        held_items = []
+        for possession in possessions:
+            if possession.db.held:
+                if possession.db.held in hands:
+                    full_hands += 1
+                    held_items.append(possession)
+                elif held == 'both':
+                    full_hands += 2
+                    held_items.append(possession)
+
+        if full_hands >= 2:
+            caller.msg(f"Manus {target.db.gen_sg} sunt plenae!")
+            return
+
         # give object
         # 12/7/19 added to deal with clothing, removes worn clothes
         if to_give.db.worn:
@@ -382,6 +430,12 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         target.msg("%s %s tibi dedit." % (caller.key, to_give.db.acc_sg))
         # Call the object script's at_give() method.
         to_give.at_give(caller, target)
+
+        if held_items:
+            hands.remove(held_items[0].db.held)
+            to_give.db.held = hands[0]
+        else:
+            to_give.db.held = target.db.handedness
 
 
 class CmdSetDesc(COMMAND_DEFAULT_CLASS):
@@ -650,6 +704,8 @@ class CmdPut(COMMAND_DEFAULT_CLASS):
         intended_to_store.move_to(intended_container, quiet=True)
         caller.location.msg_contents("%s %s in %s posuit." % (caller.db.nom_sg, intended_to_store.db.acc_sg, intended_container.db.acc_sg),exclude=caller)
 
+        intended_to_store.db.held = False
+
 class CmdGetOut(COMMAND_DEFAULT_CLASS):
     """
     Move an object from a location in the caller's vicinity into the caller's inventory.
@@ -719,9 +775,36 @@ class CmdGetOut(COMMAND_DEFAULT_CLASS):
             caller.msg(f"(Did you mean '{intended_get.db.acc_sg}'?)")
             return
 
+        # Check if target's hands are full
+
+        possessions = caller.contents
+        hands = ['left','right']
+        full_hands = 0
+        held_items = []
+        for possession in possessions:
+            if possession.db.held:
+                if possession.db.held in hands:
+                    full_hands += 1
+                    held_items.append(possession)
+                elif held == 'both':
+                    full_hands += 2
+                    held_items.append(possession)
+
+        if full_hands >= 2:
+            caller.msg(f"Manus tuae sunt plenae!")
+            return
+
         caller.msg("%s ex %s excepisti." % (intended_get.db.acc_sg, intended_source.db.abl_sg))
         intended_get.move_to(caller, quiet=True)
         caller.location.msg_contents("%s %s ex %s excepit." % (caller.db.nom_sg, intended_get.db.acc_sg, intended_source.db.abl_sg),exclude=caller)
+
+        # Put in hand
+
+        if held_items:
+            hands.remove(held_items[0].db.held)
+            intended_get.db.held = hands[0]
+        else:
+            intended_get.db.held = caller.db.handedness
 
 class CmdLookIn(COMMAND_DEFAULT_CLASS):
     """

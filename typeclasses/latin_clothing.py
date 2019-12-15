@@ -334,6 +334,8 @@ class Clothing(Object):
         wearer.location.msg_contents(message + ".", exclude=wearer)
         wearer.msg(f"{self.db.acc_sg} induisti.")
 
+        self.db.held = False
+
     def remove(self, wearer, quiet=False):
         """
         Removes worn clothes and optionally echoes to the room.
@@ -344,6 +346,24 @@ class Clothing(Object):
         Kwargs:
             quiet (bool): If false, does not message the room
         """
+        # See if wearer's hands are full:
+        possessions = wearer.contents
+        hands = ['right','left']
+        held_items = []
+        full_hands = 0
+        for possession in possessions:
+            if possession.db.held:
+                if possession.db.held in hands:
+                    held_items.append(possession)
+                    full_hands += 1
+                elif possession.db.held == 'both':
+                    held_items.append(possession)
+                    full_hands += 2
+
+        if full_hands >= 2:
+            wearer.msg("Manus tuae sunt plenae!")
+            return
+
         self.db.worn = False
         # JI (12/7/2019) Translated Message to Latin
         remove_message = "%s %s exuit." % (wearer, self.db.acc_sg)
@@ -374,6 +394,12 @@ class Clothing(Object):
         if not quiet:
             wearer.location.msg_contents(remove_message, exclude=wearer)
             wearer.msg(f"{self.db.acc_sg} exuisti.")
+
+        if held_items:
+            hands.remove(held_items[0].db.held)
+            self.db.held = hands[0]
+        else:
+            self.db.held = wearer.db.handedness
 
     def at_get(self, getter):
         """
