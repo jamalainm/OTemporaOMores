@@ -81,12 +81,37 @@ class Character(EventCharacter,LatinNoun):
         self.db.right_hand = False
         self.db.left_hand = False
 
+        # Experiment with stats
+
+        # first calculate the bonus
+
+        bonus = self.db.stats['con']
+        if bonus % 2 != 0:
+            bonus -= 1
+        bonus -= 10
+        bonus /= 2
+        starting_hp = 10 + int(bonus)
+        self.db.hp = {'max':starting_hp,'current':starting_hp}
+
+        # lifting/carrying
+
+        strength = self.db.stats['str']
+        self.db.lift_carry = {'lift': round(strength * 30 * 0.45,1), 'encumbered': round(strength * 5 * 0.45,1), 'v_encumbered': round(strength * 10 * 0.45,1),'current':0,'max':round(strength * 15 * 0.45,1)}
+
         # Add the following so players start with clothes
         underwear = create_object(
                 typeclass = "typeclasses.latin_clothing.Clothing",
                 key = "subligaculum",
                 location = self.dbref,
-                attributes=[('gender','3'),('clothing_type','underpants'),('nom_sg','subligaculum'),('gen_sg','subligaculi'),('worn',True),('desc','Briefs')]
+                attributes=[
+                    ('gender','3'),
+                    ('clothing_type','underpants'),
+                    ('nom_sg','subligaculum'),
+                    ('gen_sg','subligaculi'),
+                    ('worn',True),
+                    ('desc','Briefs'),
+                    ('physical',{'material':'linen','rigid':False,'volume':0.5,'mass':0.45})
+                    ]
                 )
 
         if int(self.db.gender) == 1:
@@ -94,9 +119,30 @@ class Character(EventCharacter,LatinNoun):
                     typeclass = "typeclasses.latin_clothing.Clothing",
                     key = "strophium",
                     location = self.dbref,
-                    attributes=[('gender','3'),('clothing_type','undershirt'),('nom_sg','strophium'),('gen_sg','strophii'),('worn',True),('desc','A bandeau')]
+                    attributes=[
+                        ('gender','3'),
+                        ('clothing_type','undershirt'),
+                        ('nom_sg','strophium'),
+                        ('gen_sg','strophii'),
+                        ('worn',True),
+                        ('desc','A bandeau'),
+                        ('physical',{'material':'linen','rigid':False,'volume':0.5,'mass':0.45})
+                        ]
                     )
 
+        items_carried = self.contents
+        mass_carried = 0
+        for item in items_carried:
+            mass_carried += item.db.physical['mass']
+        self.db.lift_carry['current'] = mass_carried
+
+
+    #making a new get_display_name that is aware of case and not
+    # dependent on the key of the object
+    def get_display_name(self, looker, **kwargs):
+        if self.locks.check_lockstring(looker, "perm(Builder)"):
+            return "{}(#{})".format(self.db.nom_sg, self.id)
+        return self.db.nom_sg
 
     def announce_move_from(self, destination, msg=None, mapping=None):
         """

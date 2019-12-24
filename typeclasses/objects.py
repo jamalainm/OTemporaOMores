@@ -185,6 +185,13 @@ class Object(EventObject,LatinNoun):
 
         self.tags.add('latin')
 
+    #making a new get_display_name that is aware of case and not
+    # dependent on the key of the object
+    def get_display_name(self, looker, **kwargs):
+        if self.locks.check_lockstring(looker, "perm(Builder)"):
+            return "{}(#{})".format(self.db.nom_sg, self.id)
+        return self.db.nom_sg
+
 # Trying to make something that could be an object players can put other objects in and take objects out of. Maybe just add a "can_hold" tag to something; no need for a brand new typeclass
 #
 #class Container(Object):

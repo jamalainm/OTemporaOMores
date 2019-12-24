@@ -1,5 +1,10 @@
 <!-- file mygame/web/chargen/templates/chargen/create.html-->
 
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+	
 {% extends "base.html" %}
 {% block content %}
 <h1>Character Creation</h1>
@@ -7,23 +12,26 @@
 <!-- changed from "chargen/create/" to "characters/create"-->
 <form action="/characters/create/" method="post">
     {% csrf_token %}
-    <div>
-	    The 'Gens' was the large, familial group to which all natural born Roman citizens belonged. Most people would address you by a name derived from your 'gens.' In Latin, this name was called the 'nomen.'
-    </div>
-    <div>
-    {{ form.gens }}
-    </div>
-    <div>
-	    For purposes of naming, Romans associated all humans with either the male or female genders. There was a third grammatical gender, but Romans did not use it when discussing people.
-    </div>
-    <div>
-	    {{ form.gender }}
-    <div>
-	    The 'Praenomen' was used within clans and more familiar social groups. This is the origin of the concept of a 'first name' in Roman-influenced European cultures.
-    </div>
-    <div>
-	    {{ form.praenomen }}
-    </div>
+	<div id="explanation" class="container">
+	    <p>In ancient Rome, the <i>gens</i> was the largest kin unit, comprising several families who shared a common name. A Roman's <i>nomen</i>, or primary name would be based on their <i>gens</i>; for example a man belonging to the <i>gens Sempronia</i> would be known as "Sempronius" and a woman from that same gens as "Sempronia." </p>
+	    <div id="clans" class="d-flex justify-content-between flex-wrap"></div>
+	</div>
+	<div id="genderExplanation" class="container">
+	    <p>Please select a gender for your character<p>
+	    <div id="gender" class="container">
+<!--	        <input name="gender" id="Female" type="button" class="btn btn-success" style="margin-left:2px;margin-right:2px" value="Female">
+<input name="gender" id="Male" type="button" class="btn btn-success" style="margin-left:2px;margin-right:2px" value="Male"> -->
+	        <input name="gender" id="Female" type="radio" value="Female" required>Female
+	        <input name="gender" id="Male" type="radio" value="Male" required>Male
+	    </div>
+	</div>
+	<div id="praenominaExplanation" class="container">
+	    <p>The <i>praenomen</i> was used by intimates and immediate family members. The available <i>praenomina</i> are determined by a person's <i>gens</i> and gender.</p>
+	</div>
+	<div id="statExplanation" class="container">
+        <p>The stats are generated based on the point-buy system from the 5th edition of <i>Dungeons and Dragons</i>, which means each group of generated stats has an equivalent value. Still, please feel free to generate a new set it the first does not appeal.</p>
+	</div>
+    <script src="/static/app.js"></script>
     <div>
 	    {{ form.captcha }}
     <input type="submit" name="submit" value="Submit"/>

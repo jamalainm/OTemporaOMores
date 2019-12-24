@@ -185,6 +185,8 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
         # try to duplicate 'try_num_prefixes' from 'evennia/commands/cmdparser.py'
         
         caller = self.caller
+        current_carry = caller.db.lift_carry['current']
+        carry_max = caller.db.lift_carry['max']
 
         if not self.args:
             caller.msg("Quid capere velis?")
@@ -229,7 +231,12 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
         if not obj.at_before_get(caller):
             return
 
+        # See if character can carry any more
+        if current_carry + obj.db.physical['mass'] > carry_max:
+            caller.msg('Plus ponderis ferre non potes!')
+            return
         obj.move_to(caller, quiet=True)
+        caller.db.lift_carry['current'] += obj.db.physical['mass']
         caller.msg("%s cepisti." % obj.db.acc_sg)
         caller.location.msg_contents("%s %s cepit." % (caller.name, obj.db.acc_sg), exclude=caller)
         # calling at_get hook method
@@ -295,6 +302,7 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
             obj.remove(caller,quiet=True)
 
         obj.move_to(caller.location, quiet=True)
+        caller.db.lift_carry['current'] -= obj.db.physical['mass']
         caller.msg("%s reliquisti." % (obj.db.acc_sg,)) # You have given X up
         caller.location.msg_contents("%s %s reliquit." % (caller.name, obj.name), exclude=caller)
         # Call the object script's at_drop() method.
@@ -421,6 +429,15 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
             caller.msg(f"Manus {target.db.gen_sg} sunt plenae!")
             return
 
+        # Weight calculations
+        target_capacity = target.db.lift_carry['max']
+        target_current = target.db.lift_carry['current']
+        obj_mass = to_give.db.physical['mass']
+        if obj_mass + target_current > target_capacity:
+            caller.msg(f"{target.db.nom_sg} plus ponderis ferre non potest!")
+            target.msg(f"{caller.db.nom_sg} tibi {obj.db.acc_sg} dare voluit, sed tu plus ponderis ferre non potes!")
+            return
+
         # give object
         # 12/7/19 added to deal with clothing, removes worn clothes
         if to_give.db.worn:
@@ -428,6 +445,8 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         caller.msg("%s %s dedisti." % (to_give.db.acc_sg, target.db.dat_sg))
         to_give.move_to(target, quiet=True)
         target.msg("%s %s tibi dedit." % (caller.key, to_give.db.acc_sg))
+        target.db.lift_carry['current'] += obj_mass
+        caller.db.lift_carry['current'] -= obj_mass
         # Call the object script's at_give() method.
         to_give.at_give(caller, target)
 
@@ -700,7 +719,36 @@ class CmdPut(COMMAND_DEFAULT_CLASS):
             caller.msg(f"{intended_to_store.db.nom_sg} in se poni non potest!")
             return
 
+# Manage volume and dimensions of container
+
+        obj_volume = intended_to_store.db.physical['volume']
+        container_max_volume = intended_container.db.container['max_vol']
+        container_current_vol = intended_container.db.container['rem_vol']
+        if obj_volume > container_current_vol:
+            caller.msg(f"In {intended_container.db.abl_sg} non est spatium!")
+            return
+        if intended_to_store.db.physical['rigid']:
+            obj_dimensions = [
+                    intended_to_store.db.physical['x'],
+                    intended_to_store.db.physical['y'],
+                    intended_to_store.db.physical['z']
+                    ]
+            container_dimensions = [
+                    intended_container.db.container['x'],
+                    intended_container.db.container['y'],
+                    intended_container.db.container['z']
+                    ]
+            obj_dimensions.sort()
+            container_dimensions.sort()
+            if (obj_dimensions[2] / 2) > container_dimensions[2]:
+                caller.msg(f"Forma {intended_to_store.db.gen_sg} in {intended_to_store.db.acc_sg} poni non potest.")
+                return
+            elif obj_dimensions[1] > container_dimensions[1] or obj_dimensions[0] > container_dimensions[0]:
+                caller.msg(f"Forma {intended_to_store.db.gen_sg} in {intended_to_store.db.acc_sg} poni non potest.")
+                return
+
         caller.msg("%s in %s posuisti." % (intended_to_store.db.acc_sg, intended_container.db.acc_sg))
+        intended_container.db.container['rem_vol'] -= obj_volume
         intended_to_store.move_to(intended_container, quiet=True)
         caller.location.msg_contents("%s %s in %s posuit." % (caller.db.nom_sg, intended_to_store.db.acc_sg, intended_container.db.acc_sg),exclude=caller)
 
@@ -793,6 +841,10 @@ class CmdGetOut(COMMAND_DEFAULT_CLASS):
         if full_hands >= 2:
             caller.msg(f"Manus tuae sunt plenae!")
             return
+
+# Deal with volume of container
+
+        intended_source.db.container['rem_vol'] += intended_get.db.physical['volume']
 
         caller.msg("%s ex %s excepisti." % (intended_get.db.acc_sg, intended_source.db.abl_sg))
         intended_get.move_to(caller, quiet=True)

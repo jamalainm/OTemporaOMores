@@ -5,9 +5,9 @@ from .choices import *
 
 class CharApp(models.Model):
     app_id = models.AutoField(primary_key=True)
-    gens = models.IntegerField(choices=GENTES_CHOICES,default=1)
-    gender = models.IntegerField(choices=GENDER_CHOICES,default=1)
-    praenomen = models.IntegerField(choices=PRAENOMINA_CHOICES,default=1)
+    gens = models.TextField(verbose_name='Gens')
+    gender = models.TextField(verbose_name='Gender')
+    praenomen = models.TextField(verbose_name='Praenomen')
     date_applied = models.DateTimeField(verbose_name='Date Applied')
     background = models.TextField(verbose_name='Background')
     account_id = models.IntegerField(default=1, verbose_name='Account ID')

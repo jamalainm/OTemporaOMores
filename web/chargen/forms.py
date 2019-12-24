@@ -19,9 +19,9 @@ class PlainTextWidgetWithHiddenCopy(forms.Widget):
                 )
 
 class AppForm(forms.Form):
-    gens = forms.ChoiceField(choices=GENTES_CHOICES, required=True, label='Gens (This is the familial clan with which every natural born Roman citizen was associated and would be the basis for the name by which most people addressed them.')
-    gender = forms.ChoiceField(choices=GENDER_CHOICES, widget=forms.RadioSelect, required=True, label='Gender')
-    praenomen = forms.ChoiceField(choices=PRAENOMINA_CHOICES, required=True, label='Praenomen (This is the name by which very close friends and familiy members would address you.')
+#    gens = forms.ChoiceField(choices=GENTES_CHOICES, required=True, label='Gens (This is the familial clan with which every natural born Roman citizen was associated and would be the basis for the name by which most people addressed them.')
+#    gender = forms.ChoiceField(choices=GENDER_CHOICES, widget=forms.RadioSelect, required=True, label='Gender')
+#    praenomen = forms.ChoiceField(choices=PRAENOMINA_CHOICES, required=True, label='Praenomen (This is the name by which very close friends and familiy members would address you.')
     # Trying out stat generation
 #   It won't regenerate the numbers on page refresh this way
 #    dict_attributes = {'str':8, 'dex':8, 'con':8, 'int':8, 'wis':8, 'cha':8}

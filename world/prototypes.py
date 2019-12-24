@@ -42,8 +42,10 @@ BAG = {
         "gen_sg":"sacci",
         "gender":"2",
         "desc":"A bag",
-        "clothing_teype":"back",
-        "can_hold":True
+        "clothing_type":"back",
+        "can_hold":True,
+        'physical':{"material":"linen","rigid":False,"volume":0.75,"mass":0.45},
+        'container':{'max_vol':24,'rem_vol':24,"x":0.3,"y":0.4,"z":0.2}
         }
 BANDEAU = {
         "key":"strophium",
@@ -52,7 +54,8 @@ BANDEAU = {
         "gen_sg":"strophii",
         "gender":"3",
         "desc":"A bandeau",
-        "clothing_type":"undershirt"
+        "clothing_type":"undershirt",
+        'physical':{"material":"linen","rigid":False,"volume":0.5,'mass':0.45}
         }
 
 UNDERWEAR = {
@@ -62,7 +65,19 @@ UNDERWEAR = {
         "gen_sg":"subligaculi",
         "gender":"3",
         "desc":"Briefs",
-        "clothing_type":"underpants"
+        "clothing_type":"underpants",
+        'physical':{"material":"linen","rigid":False,"volume":0.5,'mass':0.45}
+        }
+
+SWORD = {
+        "key":"gladius",
+        "typeclass":"typeclasses.objects.Object",
+        "nom_sg":"gladius",
+        "gen_sg":"gladii",
+        "gender":"2",
+        "desc":"A shortsword",
+        "physical":{"material":"iron","rigid":True,"x":0.04,"y":0.65,"z":0.003,"mass":0.6,"volume":0.08},
+        "damage":6
         }
 
 WOOL = {
@@ -72,7 +87,8 @@ WOOL = {
         "nom_sg":"lana",
         "gen_sg":"lanae",
         "gender":"1",
-        "desc":"A pile of undyed wool"
+        "desc":"A small bale of wool",
+        'physical':{"material":"wool","rigid":False,"volume":23,"mass":3},
         }
 CLOAK = {
         "key":"pallium",
@@ -82,7 +98,8 @@ CLOAK = {
         "nom_sg":"pallium",
         "gen_sg":"pallii",
         "gender":"3",
-        "desc":"A simple, well-woven cloth, to wrap about your top"
+        "desc":"A simple, well-woven cloth, to wrap about your top",
+        "physical":{"material":"wool","rigid":False,"x":3.04,"y":1.52,"z":0.005,"mass":3,"volume":23}
         }
 HAT = {
         "key":"petasus",
@@ -92,7 +109,8 @@ HAT = {
         "nom_sg":"petasus",
         "gen_sg":"petasi",
         "gender":"2",
-        "desc":"A broad-brimmed, traveler's hat"
+        "desc":"A broad-brimmed, traveler's hat",
+        "physical":{"material":"wool","rigid":False,"mass":0.17,"volume":2.21}
         }
 
 SANDALS = {
@@ -103,7 +121,8 @@ SANDALS = {
         "nom_sg":"soleae",
         "gen_sg":"solearum",
         "gender":"1",
-        "desc":"A pair of simple sandals"
+        "desc":"A pair of simple sandals",
+        "physical":{"material":"leather","rigid":True,"x":0.107,"y":0.253,"z":0.0026,"mass":0.48,"volume":0.07}
         }
 
 TUNIC = {
@@ -114,7 +133,8 @@ TUNIC = {
         "nom_sg":"tunica",
         "gen_sg":"tunicae",
         "gender":"1",
-        "desc":"A sleeveless, knee-length tunic"
+        "desc":"A sleeveless, knee-length tunic",
+        "physical":{"material":"linen","rigid":False,"mass":1,"volume":2}
         }
 
 # from random import randint

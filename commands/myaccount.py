@@ -18,6 +18,8 @@ self.msg() and similar methods to reroute returns to the correct
 method. Otherwise all text will be returned to all connected sessions.
 
 """
+import random
+from commands.gentes import clans
 import time
 from codecs import lookup as codecs_lookup
 from django.conf import settings
@@ -42,6 +44,7 @@ __all__ = (
     "CmdWho",
     "CmdColorTest",
     "CmdQuell",
+    "CmdCharCreate",
     "CmdCharDelete",
     "CmdStyle",
 )
@@ -141,21 +144,15 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
     # this is used by the parent
     account_caller = True
 
+    name = ""
     gens = ""
-    gentes = []
-    for clan in GENTES_CHOICES:
-        gentes.append(clan[1])
-    boy_names = []
-    girl_names = []
-    all_names = []
-    for name_list in PRAENOMINA_CHOICES:
-        all_names.append(name_list[1])
-    all_names = [names.split('/') for names in all_names]
-    for names in all_names:
-        boy_names.append(names[1])
-        girl_names.append(names[0])
     gender = 0
     praenomen = ""
+    nomen = ''
+    stats = []
+    gentes = {}
+    for clan in clans:
+        gentes[clan[0]] = {'class':clan[1], 'praenomina':clan[2:]}
 
     def func(self):
         """create the new character"""
@@ -184,30 +181,49 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
                 self.gender = int(genders.index(answer) + 1)
                 break
             else:
-                self.msg("I'm afraid that was not an acceptable answer. Please start again.")
-                return
+                self.msg("I'm afraid that was not an acceptable answer. Please try  again.")
 
-        self.msg("The 'gens' was the over-arching kin-unit, roughly corresponding to 'clan' in English. Most people would be referred to by a name based on their gens, except by those very close to them. We'll select that next.")
-        for index,value in enumerate(self.gentes):
-            self.msg(f"{index + 1}) {value}")
+        clan_list = list(self.gentes.keys())
+        for index,value in enumerate(clan_list):
+            self.msg(f"{index + 1}) |c{value}|n")
+        self.msg("\nIn ancient Rome, the 'gens' was the largest kin unit, comprising several families who shared a common name. A Roman's 'nomen,' or primary name, would be based on their 'gens;' for example, a man belonging to the 'gens Sempronia' would be known as 'Sempronius' and a woman from that same gens would be 'Sempronia.'\n")
         while True:
-            answer = yield(f"Select a gens: (1-{len(self.gentes)}) ")
+            answer = yield(f"Select a gens: (1-{len(clan_list)}) ")
             answer = int(answer)
-            if answer in range(1,len(self.gentes) + 1):
-                self.gens = self.gentes[answer - 1]
+            if answer in range(1,len(clan_list) + 1):
+                self.gens = clan_list[answer - 1]
+                if self.gender == 2:
+                    self.nomen = self.gens[:-1] + 'us'
+                else:
+                    self.nomen = self.gens
                 break
             else:
-                self.msg("I'm sorry. That was not an acceptable answer. Please start again.")
-                return
-        self.msg("The 'praenomen' was a name that family members or potentially very close friends might use when addressing each other. Because this is written by an overly familiar American, the 'praenomen' will be the primary name we use when referring to one another.")
+                self.msg("I'm sorry. That was not an acceptable answer. Please try again.")
+        self.msg(f"\nYou have selected '{self.gens}' as your gens.")
+        
+        self.msg("\nThe 'praenomen' was used by intimates and immediate family members. The available 'praenomina' are determined by a person's 'gens' and gender.\n\n")
+        temp_names = self.gentes[self.gens]['praenomina']
         if self.gender == 1:
-            temp_names = self.girl_names
-        else:
-            temp_names = self.boy_names
+            for index,value in enumerate(temp_names):
+                if value in ['Marcus','Titus','Tullus']:
+                    temp_names[index] = value[:-2] + 'ia'
+                elif value[-2:] == 'us':
+                    temp_names[index] = value[:-2] + 'a'
+                elif value == 'Agrippa':
+                    temp_names[index] = 'Agrippina'
+                elif value == 'Caeso':
+                    temp_names[index] = 'Caesula'
+                elif value == 'Opiter':
+                    temp_names[index] = 'Opita'
+                elif value == 'Sertor':
+                    temp_names[index] = 'Sertora'
+                elif value == 'Volero':
+                    temp_names[index] = 'Volerona'
+
         for index,value in enumerate(temp_names):
-                self.msg(f"{index + 1}) {value}")
+                self.msg(f"{index + 1}) |c{value}|n")
         while True:
-            answer = yield(f"Select a praenomen: (1-{len(temp_names)})")
+            answer = yield(f"\nSelect a praenomen: (1-{len(temp_names)})")
             answer = int(answer)
             if answer in range(1,len(temp_names) + 1):
                 self.praenomen = temp_names[answer - 1].strip()
@@ -223,15 +239,61 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
             self.genitive = self.praenomen[:-2] + 'i'
         else:
             self.genitive = self.praenomen + 'nis'
-        self.msg("Assigned genitive form")
+
+        self.msg(f"\nYou have selected '{self.praenomen}' as your praenomen.")
+#
+# Create stats
+#
+        def makeStats():
+            statNums = [0,0,0,0,0,0]
+            points = 27;
+            while points > 0:
+                index = random.randint(0,5)
+                if statNums[index] < 5 and points > 0:
+                    statNums[index] += 1
+                    points -= 1
+                elif statNums[index] in [5,6] and points > 1: 
+                    statNums[index] += 1
+                    points -= 2
+            for index,value in enumerate(statNums):
+                statNums[index] += 9
+            return statNums
+#
+# Roll and/or reroll stats
+#
+        self.msg("\nThe following character attributes are based on the point-buy system from the 5th edition of 'Dungeons and Dragons,' which means each group of generated attributes has an equivalent value overall. Still, please feel free to generate a new set if the first does not appeal.\n\n")
+        self.msg('The minimum value is 9, the maximum is 16')
+        self.msg('The English equivalents are:\n\n')
+        self.msg('Vires: Strength')
+        self.msg('Celeritas: Speed')
+        self.msg('Valetudo: Constitution')
+        self.msg('Scientia: Intelligence')
+        self.msg('Sapientia: Wisdom')
+        self.msg('Gratia: Charisma\n\n')
+
+        while True:
+            stats = makeStats()
+            answer = yield(f"Vires: |c{stats[0]}|n Celeritas: |c{stats[1]}|n Valetudo: |c{stats[2]}|n Scientia: |c{stats[3]}|n Sapientia: |c{stats[4]}|n Gratia: |c{stats[5]}|n; Are these acceptable? [(Y)es/(N)o] ")
+            while True:
+                if answer.lower() in ['y','yes','n','no']:
+                    break
+                else:
+                    answer = yield("Please select: [(Y)es/(N)o] ")
+            if answer in ['y','yes']:
+                self.stats = stats
+                break
+
+        self.name = self.praenomen + ' ' + self.nomen
+
+        self.msg(f"You are about to freate a character named {self.name}")
         
         typeclass = settings.BASE_CHARACTER_TYPECLASS
 
-        if ObjectDB.objects.filter(db_typeclass_path=typeclass, db_key__iexact=self.praenomen):
+        if ObjectDB.objects.filter(db_typeclass_path=typeclass, db_key__iexact=self.name):
             # check if this Character already exists. Note that we are only
             # searching the base character typeclass here, not any child
             # classes.
-            self.msg("|rA character named '|w%s|r' already exists.|n" % self.praenomen)
+            self.msg("|rA character named '|w%s|r' already exists.|n" % self.name)
             return
 
         # create the character
@@ -239,7 +301,20 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
         default_home = ObjectDB.objects.get_id(settings.DEFAULT_HOME)
         permissions = settings.PERMISSION_ACCOUNT_DEFAULT
         new_character = create.create_object(
-            typeclass, key=self.praenomen, location=start_location, home=default_home, permissions=permissions,attributes=[('gens',self.gens),('gender',self.gender),('nom_sg',self.praenomen),('gen_sg',self.genitive)]
+                typeclass, 
+                key=self.name, 
+                location=start_location, 
+                home=default_home, 
+                permissions=permissions,
+                attributes=[
+                    ('gens',self.gens),
+                    ('gender',self.gender),
+                    ('praenomen',self.praenomen),
+                    ('nomen',self.nomen),
+                    ('nom_sg',self.praenomen),
+                    ('gen_sg',self.genitive),
+                    ('stats', {'str':self.stats[0],'dex':self.stats[1],'con':self.stats[2],'int':self.stats[3],'wis':self.stats[4],'cha':self.stats[5]})
+                    ]
         )
         # only allow creator (and developers) to puppet this char
         new_character.locks.add(
@@ -259,6 +334,8 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
             "Character Created: %s (Caller: %s, IP: %s)."
             % (new_character, account, self.session.address)
         )
+
+        self.msg(f"You have successfully created: {praenomen} of the gens {gens}")
 
 class CmdCharDelete(COMMAND_DEFAULT_CLASS):
     """
