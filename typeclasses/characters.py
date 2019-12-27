@@ -23,7 +23,9 @@ import random
 from typeclasses import latin_clothing
 # Adding so that some item is created with characters
 from evennia.utils.create import create_object
-class Character(EventCharacter,LatinNoun):
+# adding for combat
+from world.tb_basic import TBBasicCharacter
+class Character(EventCharacter,LatinNoun,TBBasicCharacter):
     """
     The Character defaults to reimplementing some of base Object's hook methods with the
     following functionality:
@@ -83,6 +85,22 @@ class Character(EventCharacter,LatinNoun):
 
         # Experiment with stats
 
+        if not self.db.stats:
+            statNums = [0,0,0,0,0,0]
+            points = 27;
+            while points > 0:
+                index = random.randint(0,5)
+                if statNums[index] < 5 and points > 0:
+                    statNums[index] += 1
+                    points -= 1
+                elif statNums[index] in [5,6] and points > 1: 
+                    statNums[index] += 1
+                    points -= 2
+            for index,value in enumerate(statNums):
+                statNums[index] += 9
+
+            self.db.stats = {'str':statNums[0],'dex':statNums[1],'con':statNums[2],'int':statNums[3],'wis':statNums[4],'cha':statNums[5]}
+
         # first calculate the bonus
 
         bonus = self.db.stats['con']
@@ -135,6 +153,33 @@ class Character(EventCharacter,LatinNoun):
         for item in items_carried:
             mass_carried += item.db.physical['mass']
         self.db.lift_carry['current'] = mass_carried
+
+
+    # For turn-based battle
+    def at_before_move(self, destination):
+        """
+        Called just before starting to move this object to
+        destination.
+
+        Args:
+            destination (Object): The object we are moving to
+
+        Returns:
+            shouldmove (bool): If we should move or not.
+
+        Notes:
+            If this method returns False/None, the move is cancelled
+            before it is even started.
+
+        """
+        # Keep the character from moving if at 0 HP or in combat.
+        if is_in_combat(self):
+            self.msg("You can't exit a room while in combat!")
+            return False  # Returning false keeps the character from moving.
+        if self.db.hp['current'] <= 0:
+            self.msg("You can't move, you've been defeated!")
+            return False
+        return True
 
 
     #making a new get_display_name that is aware of case and not

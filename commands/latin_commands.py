@@ -1017,3 +1017,92 @@ class CmdHold(COMMAND_DEFAULT_CLASS):
         # calling at_get hook method
         obj.at_get(caller)
 
+# Desplay statistics about the character to that character
+class CmdStats(COMMAND_DEFAULT_CLASS):
+    """
+    view vital statistics about yourself
+
+    Usage:
+      ego
+
+    Shows you information about yourself.
+    """
+
+    key = "ego"
+    locks = "cmd:all()"
+    arg_regex = r"$"
+    help_category = 'Latin'
+
+    def func(self):
+        """display statistics / data"""
+        caller = self.caller
+        # Define the variables
+        fullname = caller.db.praenomen
+        if caller.db.nomen:
+            fullname = fullname + ' ' + caller.db.nomen
+        hp_max = caller.db.hp['max']
+        hp_cur = caller.db.hp['current']
+        vir = caller.db.stats['str']
+        cel = caller.db.stats['dex']
+        val = caller.db.stats['con']
+        sci = caller.db.stats['int']
+        sap = caller.db.stats['wis']
+        gra = caller.db.stats['cha']
+        car_cur = caller.db.lift_carry['current'] / .3289
+        car_cur = round(car_cur, 1)
+        car_max = caller.db.lift_carry['max'] / .3289
+        car_max = round(car_max, 1)
+        if caller.db.handedness == 'right':
+            g_h = '  dextra'
+            o_h = 'sinistra'
+        else:
+            g_h = 'sinistra'
+            o_h = '  dextra'
+        dfn = cel - 10
+        if dfn % 2 != 0:
+            dfn -= 1
+        dfn /= 2
+        dfn += 10
+        dfn = round(dfn)
+        # turn everything into strings in order to deal with padding:
+        str_fig = {}
+        two_figures = [vir,cel,val,sci,sap,gra,dfn]
+        three_figures = [round(hp_max),round(hp_cur)]
+        five_figures = [car_cur,car_max]
+        for fig in two_figures:
+            sfig = str(fig)
+            if len(sfig) < 2:
+                sfig = ' ' + sfig
+            str_fig[fig] = sfig
+        for fig in three_figures:
+            sfig = str(fig)
+            if len(sfig) == 1:
+                sfig = '  ' + sfig
+            elif len(sfig) == 2:
+                sfig = ' ' + sfig
+            str_fig[fig] = sfig
+        diff = ''
+        for fig in five_figures:
+            sfig = str(fig)
+            if len(sfig) < 5:
+                for i in range(0,5-len(sfig)):
+                        diff += ' '
+            sfig = diff + sfig
+            str_fig[fig] = sfig
+
+        caller.msg(
+                f"\n|c{fullname}|n\n" +
+                f"---------------------------------\n" +
+                f"||     |wVires|n: |c{str_fig[vir]}|n ||  |wScientia|n: |c{str_fig[sci]}|n ||\n" +
+                f"|| |wCeleritas|n: |c{str_fig[cel]}|n || |wSapientia|n: |c{str_fig[sap]}|n ||\n" +
+                f"||  |wValetudo|n: |c{str_fig[val]}|n ||    |wGratia|n: |c{str_fig[gra]}|n ||\n" +
+                f"---------------------------------\n" +
+                f"|| |wVita|n:  |c{str_fig[hp_cur]}|n / |c{str_fig[hp_max]}|n               ||\n" +
+                f"---------------------------------\n" +
+                f"|| |wFers|n: |c{str_fig[car_cur]}|n libras ex |c{str_fig[car_max]}|n   ||\n" +
+                f"---------------------------------\n" +
+                f"|| |wManus Optima|n: |c{g_h}|n         ||\n" +
+                f"---------------------------------\n" +
+                f"|| |wPraesidium|n: |c{str_fig[dfn]}|n                ||\n" +
+                f"---------------------------------\n\n"
+                )

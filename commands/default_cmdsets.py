@@ -13,7 +13,7 @@ to add/remove commands from the default lineup. You can create your
 own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 
 """
-
+from world import tb_basic
 from evennia import default_cmds
 from evennia.contrib.ingame_python.commands import CmdCallback
 from commands import make_latin_noun
@@ -61,6 +61,8 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(latin_commands.CmdGetOut())
         self.add(latin_commands.CmdLookIn())
         self.add(latin_commands.CmdHold())
+        self.add(latin_commands.CmdStats())
+        self.add(tb_basic.BattleCmdSet())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):
