@@ -54,7 +54,7 @@ def which_one(args,caller,stuff):
         return target, args
     else:
         same = []
-        args = args.lower()
+        args = args.strip().lower()
         for item in stuff:
             characteristics = item.aliases.all()
             [x.lower() for x in characteristics]

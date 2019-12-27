@@ -47,7 +47,8 @@ from random import randint
 from random import random
 from evennia import DefaultCharacter, Command, default_cmds, DefaultScript
 from evennia.commands.default.help import CmdHelp
-
+# adding the following to begin translation into Latin
+from commands.latin_commands import which_one
 """
 ----------------------------------------------------------------------------
 OPTIONS
@@ -570,8 +571,11 @@ class TBBasicTurnHandler(DefaultScript):
             if fighter.db.combat_lastaction == 'flee':
                 cowards.append(fighter)
                 fighter.db.combat_lastaction = 'null'
+                fighter.location.msg_contents(f"cowards: {cowards}; hostiles: {hostiles}!")
             else:
-                hostiles.append(fighter)
+                if fighter.db.hp['current'] > 0:
+                    hostiles.append(fighter)
+                    fighter.location.msg_contents(f"cowards: {cowards}; hostiles: {hostiles}!")
         if len(cowards) == 0:
             flee_check = False
         if flee_check:
@@ -590,11 +594,10 @@ class TBBasicTurnHandler(DefaultScript):
                     hostile_dex_check = randint(1,20) + bonus
                     hostile.location.msg_contents(f"{hostile} rolled a {hostile_dex_check}!")
                     if hostile_dex_check > coward_dex_check:
+                        flee_check = False
                         coward.location.msg_contents('|cFlight failed!|n')
                         break
-                    else:
-                        hostiles.remove(hostile)
-                if len(hostiles) == 0:
+                if flee_check:
                     coward.location.msg_contents("Flight successful!")
                     exits = [
                             o for o in coward.location.contents if o.destination
@@ -678,18 +681,18 @@ COMMANDS START HERE
 
 class CmdFight(Command):
     """
-    Starts a fight with everyone in the same room as you.
+    Starts a fight with the target.
 
     Usage:
-      fight
+      pugna <rem>
 
     When you start a fight, everyone in the room who is able to
     fight is added to combat, and a turn order is randomly rolled.
     When it's your turn, you can attack other characters.
     """
 
-    key = "fight"
-    help_category = "combat"
+    key = "pugna"
+    help_category = "pugna"
 
     def func(self):
         """
@@ -698,32 +701,45 @@ class CmdFight(Command):
         here = self.caller.location
         fighters = []
         # Adding the following so that you have to specify someone to fight
+        if not self.args:
+            self.caller.msg("Usage: pugna <rem>")
+            return
+        else:
+            stuff = here.contents
+            target, self.args = which_one(self.args,self.caller,stuff)
+            if not target:
+                return
+        if self.args.strip().lower() != target.db.acc_sg.lower() and self.args:
+            self.caller.msg(f"(Did you mean '{target.db.acc_sg}'?)")
+            return
 
         attacker = self.caller
-        defender = self.caller.search(self.args)
-        attacker.msg(f"{defender} is your target")
+        defender = target
+#        defender = self.caller.search(self.args)
+#        attacker.msg(f"{defender} is your target")
 
         if not defender:  # No valid target given.
-            self.caller.msg("You must specify a target to fight")
+            self.caller.msg("Quem pugnare velis?")
             return
         if not defender.db.hp:
-            self.caller.msg("You can't fight that!")
+            self.caller.msg(f"Tibi {defender.db.acc_sg} pugnare non licet!")
+            return
 
         # Adjusting so it recognizes my hp syntax
         if not defender.db.hp['current']:  # Target object has no HP left or to begin with
-            self.caller.msg("You can't fight that!")
+            self.caller.msg(f"{defender.db.nom_sg} iam vict{'a' if defender.db.gender == 1 else 'us' if defender.db.gender == 2 else 'um'} est!")
             return
 
         if attacker == defender:  # Target and attacker are the same
-            self.caller.msg("You can't attack yourself!")
+            self.caller.msg("Tu te pugnare non potes!!")
             return
 
         # Adjusting so script recognizes my syntax for hp
         if not self.caller.db.hp['current']:  # If you don't have any hp
-            self.caller.msg("You can't start a fight if you've been defeated!")
+            self.caller.msg(f"Vict{'a' if self.caller.db.gender == 1 else 'us' if self.caller.db.gender == 2 else 'um'} tu pugnare non potes!")
             return
         if is_in_combat(self.caller):  # Already in a fight
-            self.caller.msg("You're already in a fight!")
+            self.caller.msg("Tu iam pugnas!")
             return
         # commenting out to len(fighters) and just adding attacker and defender
 #        for thing in here.contents:  # Test everything in the room to add it to the fight.
@@ -740,13 +756,16 @@ class CmdFight(Command):
         attacker.db.fighting = True
         defender.db.fighting = True
         if len(fighters) <= 1:  # If you're the only able fighter in the room
-            self.caller.msg("There's nobody here to fight!")
+            self.caller.msg("Nemo est quocum tu pugnare potes!")
             return
         if here.db.combat_turnhandler:  # If there's already a fight going on...
-            here.msg_contents("%s joins the fight!" % self.caller)
+            here.msg_contents("|c%s|n pugnam commisit!" % self.caller, exclude=self.caller)
+            self.caller.msg("Tu pugnam commisi!")
             here.db.combat_turnhandler.join_fight(self.caller)  # Join the fight!
             return
-        here.msg_contents("%s starts a fight!" % self.caller)
+        here.msg_contents("|c%s|n |c%s|n pugnare coepit!" % (self.caller,defender.db.acc_sg),exclude=(self.caller,defender))
+        self.caller.msg(f"Tu |c%s|n pugnare coepisti!" % defender.db.acc_sg)
+        defender.msg(f"|c{self.caller}|n te pugnare coepit!")
         # Add a turn handler script to the room, which starts combat.
         # change to this script
         here.scripts.add("world.tb_basic.TBBasicTurnHandler")
@@ -758,45 +777,114 @@ class CmdAttack(Command):
     Attacks another character.
 
     Usage:
-      attack <target>
+      pete <rem>
 
     When in a fight, you may attack another character. The attack has
     a chance to hit, and if successful, will deal damage.
     """
 
-    key = "attack"
-    help_category = "combat"
+    key = "pete"
+    help_category = "pugna"
 
     def func(self):
         "This performs the actual command."
         "Set the attacker to the caller and the defender to the target."
 
-        if not is_in_combat(self.caller):  # If not in combat, can't attack.
-            self.caller.msg("You can only do that in combat. (see: help fight)")
-            return
+        # Moving this block from before the "resolve attack" code #
 
-        if not is_turn(self.caller):  # If it's not your turn, can't attack.
-            self.caller.msg("You can only do that on your turn.")
-            return
+        here = self.caller.location
 
-        # Adjusting so it recognizes my hp syntax
-        if not self.caller.db.hp['current']:  # Can't attack if you have no HP.
-            self.caller.msg("You can't attack, you've been defeated.")
+        if not self.args:
+            self.caller.msg("Usage: pugna <rem>")
+            return
+        else:
+            stuff = here.contents
+            target, self.args = which_one(self.args,self.caller,stuff)
+            if not target:
+                return
+        if self.args.strip().lower() != target.db.acc_sg.lower() and self.args:
+            self.caller.msg(f"(Did you mean '{target.db.acc_sg}'?)")
             return
 
         attacker = self.caller
-        defender = self.caller.search(self.args)
+        defender = target
 
         if not defender:  # No valid target given.
+            self.caller.msg("Quem pugnare velis?")
             return
 
         # Adjusting so it recognizes my hp syntax
+        if not defender.db.hp:
+            self.caller.msg(f"Tibi {defender.db.acc_sg} pugnare non licet!")
+            return
         if not defender.db.hp['current']:  # Target object has no HP left or to begin with
-            self.caller.msg("You can't fight that!")
+            self.caller.msg(f"{defender.db.nom_sg} iam vict{'a' if defender.db.gender == 1 else 'us' if defender.db.gender == 2 else 'um'} est!")           
             return
 
         if attacker == defender:  # Target and attacker are the same
-            self.caller.msg("You can't attack yourself!")
+            self.caller.msg("Tu te pugnare non potes!")
+            return
+
+        # The above used to be right before the "resolve attack" code #
+
+        # the blow used to be after 'is_turn'
+        # Adjusting so it recognizes my hp syntax
+        if not self.caller.db.hp['current']:  # Can't attack if you have no HP.
+            self.caller.msg(f"Vict{'a' if self.caller.db.gender == 1 else 'us' if self.caller.db.gender == 2 else 'um'} tu pugnare non potes!")
+            return
+
+        # after I moved the top block, the above was just after 'is_turn'
+
+        if not is_in_combat(self.caller):  # If not in combat, can't attack.
+            # Join fight if defender is already fighting
+            if is_in_combat(defender):  # Already in a fight
+                here.msg_contents("|c%s|n pugnam commisit!" % self.caller, exclude=(self.caller,defender))
+                self.caller.msg("Tu pugnam commisisti!")
+                defender.msg(f"|c%s|n tecum pugnam commisit!" % self.caller)
+                here.db.combat_turnhandler.join_fight(attacker)  # Join the fight!
+                return
+            # start fight if defender not already fighting
+            else:
+                
+                fighters = []
+                fighters.append(attacker)
+                fighters.append(defender)
+                # the following two lines are my dumb workaround for trying to limit
+                # the number of initial combatants
+                attacker.db.fighting = True
+                defender.db.fighting = True
+                if len(fighters) <= 1:  # If you're the only able fighter in the room
+                    self.caller.msg("Nemo est quocum pugnare potes!")
+                    return
+                if here.db.combat_turnhandler:  # If there's already a fight going on...
+                    here.msg_contents("|c%s|n pugnam cum |c%s|n commisit!" % (self.caller,defender.db.abl_sg), exclude=(self.caller,defender))
+                    self.caller.msg("Tu cum |c%s|n pugnam comisisti!" % defender.db.abl_sg)
+                    defender.msg("|c%s|n tecum pugnam comisit!" % self.caller)
+                    here.db.combat_turnhandler.join_fight(self.caller)  # Join the fight!
+                    return
+                here.msg_contents("|c%s|n pugnam cum |c%s|n commisit!" % (self.caller,defender.db.abl_sg), exclude=(self.caller,defender))
+                self.caller.msg("Tu cum |c%s|n pugnam comisisti!" % defender.db.abl_sg)
+                defender.msg("|c%s|n tecum pugnam comisit!" % self.caller)
+                # Add a turn handler script to the room, which starts combat.
+                # change to this script
+                here.scripts.add("world.tb_basic.TBBasicTurnHandler")
+                # Remember you'll have to change the path to the script if you copy this code to your own modules!
+
+            # Commenting out the below so that this command can start a fight
+#            self.caller.msg("You can only do that in combat. (see: help fight)")
+#            return
+
+        # Adding to deal with attacking someone not in combat
+        if not is_in_combat(defender):
+            here.msg_contents("|c%s|n pugnam cum |c%s|n commisit!" % (self.caller,defender.db.abl_sg), exclude=(self.caller,defender))
+            self.caller.msg("Tu cum |c%s|n pugnam comisisti!" % defender.db.abl_sg)
+            defender.msg("|c%s|n tecum pugnam comisit!" % self.caller)
+            here.db.combat_turnhandler.join_fight(defender)  # Join the fight!
+            return
+
+        if not is_turn(self.caller):  # If it's not your turn, can't attack.
+            # commenting out, since I don't think it's all that helpful
+#            self.caller.msg("You can only do that on your turn.")
             return
 
         "If everything checks out, call the attack resolving function."
