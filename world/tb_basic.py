@@ -41,8 +41,9 @@ This module is meant to be heavily expanded on, so you may want to copy it
 to your game's 'world' folder and modify it there rather than importing it
 in your game and using it as-is.
 """
-
+import copy
 from random import randint
+from random import random
 from evennia import DefaultCharacter, Command, default_cmds, DefaultScript
 from evennia.commands.default.help import CmdHelp
 
@@ -52,7 +53,7 @@ OPTIONS
 ----------------------------------------------------------------------------
 """
 
-TURN_TIMEOUT = 30  # Time before turns automatically end, in seconds
+TURN_TIMEOUT = 3  # Time before turns automatically end, in seconds
 ACTIONS_PER_TURN = 1  # Number of actions allowed per turn
 
 """
@@ -60,7 +61,10 @@ ACTIONS_PER_TURN = 1  # Number of actions allowed per turn
 COMBAT FUNCTIONS START HERE
 ----------------------------------------------------------------------------
 """
-
+# Added the following function to calculates stat bonuses
+def calc_bonus(stat):
+    bonus = round((stat - 11 if stat % 2 else stat - 10)/2)
+    return bonus
 
 def roll_init(character):
     """
@@ -86,7 +90,8 @@ def roll_init(character):
 
         This way, characters with a higher dexterity will go first more often.
     """
-    return randint(1, 1000)
+    bonus = calc_bonus(character.db.stats['dex'])
+    return random() * 20 + bonus
 
 
 def get_attack(attacker, defender):
@@ -110,8 +115,12 @@ def get_attack(attacker, defender):
         to this function, even though nothing from either one are used in this example.
     """
     # For this example, just return a random integer up to 100.
-    attack_value = randint(1, 100)
-    return attack_value
+    # adjusting to take into account attacker's strength
+    bonus = calc_bonus(attacker.db.stats['str'])
+    attack_roll = randint(1, 20)
+    attack_value = (attack_roll + bonus) if attack_roll > 0 else 1
+    attacker.location.msg_contents(f"{attacker.db.praenomen} rolls an {attack_roll} and gets {attack_value} with the bonus")
+    return (attack_roll,attack_value)
 
 
 def get_defense(attacker, defender):
@@ -134,7 +143,9 @@ def get_defense(attacker, defender):
         As above, this can be expanded upon based on character stats and equipment.
     """
     # For this example, just return 50, for about a 50/50 chance of hit.
-    defense_value = 50
+    # adjusting to take into account defender's dex
+    bonus = calc_bonus(defender.db.stats['dex'])
+    defense_value = 10 + bonus
     return defense_value
 
 
@@ -158,9 +169,19 @@ def get_damage(attacker, defender):
         Again, this can be expanded upon.
     """
     # Changed damage to 5e unarmed values to match lower hp values
-    strength = attacker.db.stats['str']
-    bonus = round((strength - 11 if strength % 2 else strength - 10)/2)
-    damage_value = (1 + bonus) if bonus > 1 else 1
+    weapon = False
+    stuff = attacker.contents
+    for thing in stuff:
+        if thing.db.held:
+            if thing.db.damage:
+                weapon = thing
+                attacker.location.msg_contents(f"|gWEAPON|n")
+    bonus = calc_bonus(attacker.db.stats['str'])
+    if weapon:
+        damage_value = randint(1,weapon.db.damage) + bonus
+    else:
+        damage_value = 1 + bonus
+    damage_value = 1 if damage_value < 1 else damage_value
     return damage_value
 
 
@@ -211,15 +232,18 @@ def resolve_attack(attacker, defender, attack_value=None, defense_value=None):
     """
     # Get an attack roll from the attacker.
     if not attack_value:
-        attack_value = get_attack(attacker, defender)
+        attack_roll,attack_value = get_attack(attacker, defender)
     # Get a defense value from the defender.
     if not defense_value:
         defense_value = get_defense(attacker, defender)
     # If the attack value is lower than the defense value, miss. Otherwise, hit.
-    if attack_value < defense_value:
+    if attack_value < defense_value or attack_roll == 1:
         attacker.location.msg_contents("%s's attack misses %s!" % (attacker, defender))
     else:
-        damage_value = get_damage(attacker, defender)  # Calculate damage value.
+        if attack_roll == 20:
+            damage_value = 2 * (get_damage(attacker, defender))  # Calculate damage value.
+        else:
+            damage_value = get_damage(attacker, defender)  # Calculate damage value.
         # Announce damage dealt and apply damage.
         attacker.location.msg_contents(
             "%s hits %s for %i damage!" % (attacker, defender, damage_value)
@@ -431,16 +455,24 @@ class TBBasicTurnHandler(DefaultScript):
         self.db.timer -= self.interval  # Count down the timer.
 
         if self.db.timer <= 0:
+            # adding following to have auto attack at timer end
+            attacker = currentchar
+            if self.db.fighters[0] == currentchar:
+                defender = self.db.fighters[1]
+            else:
+                defender = self.db.fighters[0]
+            resolve_attack(attacker,defender)
+            spend_action(currentchar, "all", action_name="attack")  # Use up one action.
             # Force current character to disengage if timer runs out.
-            self.obj.msg_contents("%s's turn timed out!" % currentchar)
-            spend_action(
-                currentchar, "all", action_name="disengage"
-            )  # Spend all remaining actions.
+#            self.obj.msg_contents("%s's turn timed out!" % currentchar)
+#            spend_action(
+#                currentchar, "all", action_name="disengage"
+#            )  # Spend all remaining actions.
             return
-        elif self.db.timer <= 10 and not self.db.timeout_warning_given:  # 10 seconds left
-            # Warn the current character if they're about to time out.
-            currentchar.msg("WARNING: About to time out!")
-            self.db.timeout_warning_given = True
+#        elif self.db.timer <= 10 and not self.db.timeout_warning_given:  # 10 seconds left
+#            # Warn the current character if they're about to time out.
+#            currentchar.msg("WARNING: About to time out!")
+#            self.db.timeout_warning_given = True
 
     def initialize_for_combat(self, character):
         """

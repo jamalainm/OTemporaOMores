@@ -25,6 +25,7 @@ from typeclasses import latin_clothing
 from evennia.utils.create import create_object
 # adding for combat
 from world.tb_basic import TBBasicCharacter
+from world.tb_basic import is_in_combat
 class Character(EventCharacter,LatinNoun,TBBasicCharacter):
     """
     The Character defaults to reimplementing some of base Object's hook methods with the
