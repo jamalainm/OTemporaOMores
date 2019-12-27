@@ -42,6 +42,7 @@ to your game's 'world' folder and modify it there rather than importing it
 in your game and using it as-is.
 """
 import copy
+from random import choice
 from random import randint
 from random import random
 from evennia import DefaultCharacter, Command, default_cmds, DefaultScript
@@ -214,7 +215,10 @@ def at_defeat(defeated):
         into a dying state or something similar) then this is the place to
         do it.
     """
-    defeated.location.msg_contents("%s has been defeated!" % defeated)
+    # adding the following line to deal with dumb workaround to limit number
+    # of initial combatants
+    defeated.db.fighting = False
+    defeated.location.msg_contents("|w%s has been defeated!|n" % defeated)
 
 
 def resolve_attack(attacker, defender, attack_value=None, defense_value=None):
@@ -238,7 +242,7 @@ def resolve_attack(attacker, defender, attack_value=None, defense_value=None):
         defense_value = get_defense(attacker, defender)
     # If the attack value is lower than the defense value, miss. Otherwise, hit.
     if attack_value < defense_value or attack_roll == 1:
-        attacker.location.msg_contents("%s's attack misses %s!" % (attacker, defender))
+        attacker.location.msg_contents("%s's attack |cmisses|n %s!" % (attacker, defender))
     else:
         if attack_roll == 20:
             damage_value = 2 * (get_damage(attacker, defender))  # Calculate damage value.
@@ -246,13 +250,16 @@ def resolve_attack(attacker, defender, attack_value=None, defense_value=None):
             damage_value = get_damage(attacker, defender)  # Calculate damage value.
         # Announce damage dealt and apply damage.
         attacker.location.msg_contents(
-            "%s hits %s for %i damage!" % (attacker, defender, damage_value)
+            "%s hits %s for |r%i|n damage!" % (attacker, defender, damage_value)
         )
         apply_damage(defender, damage_value)
         # If defender HP is reduced to 0 or less, call at_defeat.
         # Adjusting so that script recognizes my hp syntax
         if defender.db.hp['current'] <= 0:
             at_defeat(defender)
+            # adding the following to deal with my dumb workaround to limit
+            # initial number of combatants
+            defender.db.fighting = False
 
 
 def combat_cleanup(character):
@@ -269,6 +276,10 @@ def combat_cleanup(character):
     for attr in character.attributes.all():
         if attr.key[:7] == "combat_":  # If the attribute name starts with 'combat_'...
             character.attributes.remove(key=attr.key)  # ...then delete it!
+        # adding the next line to deal with my dumb workaround to limit
+        # initial number of fighters
+        if attr.key == 'fighting':
+            character.attributes.remove(key=attr.key)
 
 
 def is_in_combat(character):
@@ -376,6 +387,9 @@ class TBBasicCharacter(DefaultCharacter):
         # Adjusting so that the script recognizes my hp
         if self.db.hp['current'] <= 0:
             self.msg("You can't move, you've been defeated!")
+            # adding the following to deal with dumb workaround for limiting
+            # initial number of fighters
+            self.db.fighting = False
             return False
         return True
 
@@ -404,7 +418,7 @@ class TBBasicTurnHandler(DefaultScript):
         Called once, when the script is created.
         """
         self.key = "Combat Turn Handler"
-        self.interval = 5  # Once every 5 seconds
+        self.interval = 1  # Once every 5 seconds
         self.persistent = True
         self.db.fighters = []
 
@@ -413,7 +427,8 @@ class TBBasicTurnHandler(DefaultScript):
             # adjusted so it would recognize my hp syntax
             if thing.db.hp:
                 if thing.db.hp['current'] > 0:
-                    self.db.fighters.append(thing)
+                    if thing.db.fighting == True:
+                        self.db.fighters.append(thing)
 
         # Initialize each fighter for combat
         for fighter in self.db.fighters:
@@ -457,10 +472,27 @@ class TBBasicTurnHandler(DefaultScript):
         if self.db.timer <= 0:
             # adding following to have auto attack at timer end
             attacker = currentchar
-            if self.db.fighters[0] == currentchar:
-                defender = self.db.fighters[1]
+            # In large battles defeated characters still involved
+            if attacker.db.hp['current'] <= 0:
+                spend_action(currentchar, "all", action_name="disengage")  # Use up one action.
+                return
+            # need to deal with group combat situations?
+            victims = []
+            for fighter in self.db.fighters:
+                if fighter != currentchar and fighter.db.hp['current'] > 0:
+                    victims.append(fighter)
+            # commenting out for experiment in group combat and efficiency as folks
+            # are defeated
+#            if self.db.fighters[0] == currentchar:
+#                defender = self.db.fighters[1]
+#            else:
+#                defender = self.db.fighters[0]
+            if len(victims) == 0:
+                spend_action(currentchar, "all", action_name="disengage")  # Use up one action.
+                return
+                    
             else:
-                defender = self.db.fighters[0]
+                defender = choice(victims)
             resolve_attack(attacker,defender)
             spend_action(currentchar, "all", action_name="attack")  # Use up one action.
             # Force current character to disengage if timer runs out.
@@ -523,15 +555,65 @@ class TBBasicTurnHandler(DefaultScript):
             ):  # If a character has done anything but disengage
                 disengage_check = False
         if disengage_check:  # All characters have disengaged
-            self.obj.msg_contents("All fighters have disengaged! Combat is over!")
+            self.obj.msg_contents("|gAll fighters have disengaged! Combat is over!|n")
+            # added this next line to remove the 'fighting' attribute
+            for fighter in self.db.fighters:
+                fighter.db.fighting = False
             self.stop()  # Stop this script and end combat.
             return
+            
+        # adding following for "flee"
+        flee_check = True
+        cowards = []
+        hostiles = []
+        for fighter in self.db.fighters:
+            if fighter.db.combat_lastaction == 'flee':
+                cowards.append(fighter)
+                fighter.db.combat_lastaction = 'null'
+            else:
+                hostiles.append(fighter)
+        if len(cowards) == 0:
+            flee_check = False
+        if flee_check:
+            if len(hostiles) <= 0:
+                for fighter in self.db.fighters:
+                    fighter.db.fighting = False
+                self.stop()
+                return
+            else:
+                coward = cowards[0]
+                bonus = calc_bonus(coward.db.stats['dex'])
+                coward_dex_check = randint(1,20) + bonus
+                coward.location.msg_contents(f"{coward} rolls a {coward_dex_check}, trying to |cflee|n!")
+                for hostile in hostiles:
+                    bonus = calc_bonus(hostile.db.stats['dex'])
+                    hostile_dex_check = randint(1,20) + bonus
+                    hostile.location.msg_contents(f"{hostile} rolled a {hostile_dex_check}!")
+                    if hostile_dex_check > coward_dex_check:
+                        coward.location.msg_contents('|cFlight failed!|n')
+                        break
+                    else:
+                        hostiles.remove(hostile)
+                if len(hostiles) == 0:
+                    coward.location.msg_contents("Flight successful!")
+                    exits = [
+                            o for o in coward.location.contents if o.destination
+                            ]
+                    escape = choice(exits)
+                    coward.location.msg_contents(f"{escape.destination}")
+                    combat_cleanup(coward)
+                    self.db.fighters.remove(coward)
+                    escape.at_traverse(coward,escape.destination)
 
         # Check to see if only one character is left standing. If so, end combat.
         defeated_characters = 0
         for fighter in self.db.fighters:
             # Adjusting so the script recognizes my syntax for hp
             if fighter.db.hp['current'] == 0:
+                # initial number of fighters
+                # added the following to deal with dumb workaround to limit
+                # now commenting out, bc combat seems to keep going for some reason
+#                fighter.db.fighting = False
                 defeated_characters += 1  # Add 1 for every fighter with 0 HP left (defeated)
         if defeated_characters == (
             len(self.db.fighters) - 1
@@ -540,8 +622,11 @@ class TBBasicTurnHandler(DefaultScript):
                 # Adjusting so that script recognizes my hp syntax
                 if fighter.db.hp['current'] != 0:
                     LastStanding = fighter  # Pick the one fighter left with HP remaining
-            self.obj.msg_contents("Only %s remains! Combat is over!" % LastStanding)
+            self.obj.msg_contents("|gOnly %s remains! Combat is over!|n" % LastStanding)
             self.stop()  # Stop this script and end combat.
+            # added the following to deal with my dumb work around to limit
+            # number of initial fighters
+            LastStanding.db.fighting = False
             return
 
         # Cycle to the next turn.
@@ -577,8 +662,11 @@ class TBBasicTurnHandler(DefaultScript):
         self.db.fighters.insert(self.db.turn, character)
         # Tick the turn counter forward one to compensate.
         self.db.turn += 1
+        # added next line to account for attempts at limiting number of fighters
+        self.db.fighting = True
         # Initialize the character like you do at the start.
         self.initialize_for_combat(character)
+
 
 
 """
@@ -609,6 +697,26 @@ class CmdFight(Command):
         """
         here = self.caller.location
         fighters = []
+        # Adding the following so that you have to specify someone to fight
+
+        attacker = self.caller
+        defender = self.caller.search(self.args)
+        attacker.msg(f"{defender} is your target")
+
+        if not defender:  # No valid target given.
+            self.caller.msg("You must specify a target to fight")
+            return
+        if not defender.db.hp:
+            self.caller.msg("You can't fight that!")
+
+        # Adjusting so it recognizes my hp syntax
+        if not defender.db.hp['current']:  # Target object has no HP left or to begin with
+            self.caller.msg("You can't fight that!")
+            return
+
+        if attacker == defender:  # Target and attacker are the same
+            self.caller.msg("You can't attack yourself!")
+            return
 
         # Adjusting so script recognizes my syntax for hp
         if not self.caller.db.hp['current']:  # If you don't have any hp
@@ -617,10 +725,20 @@ class CmdFight(Command):
         if is_in_combat(self.caller):  # Already in a fight
             self.caller.msg("You're already in a fight!")
             return
-        for thing in here.contents:  # Test everything in the room to add it to the fight.
-            # Adjusting so that script recognizes my hp syntax
-            if thing.db.hp:  # If the object has HP...
-                fighters.append(thing)  # ...then add it to the fight.
+        # commenting out to len(fighters) and just adding attacker and defender
+#        for thing in here.contents:  # Test everything in the room to add it to the fight.
+#            # Adjusting so that script recognizes my hp syntax
+#            if thing.db.hp:  # If the object has HP...
+#                if thing.db.hp['current'] > 0:
+#                    # added this premise for the conditional
+#                    if thing == self.args:
+#                        fighters.append(thing)  # ...then add it to the fight.
+        fighters.append(attacker)
+        fighters.append(defender)
+        # the following two lines are my dumb workaround for trying to limit
+        # the number of initial combatants
+        attacker.db.fighting = True
+        defender.db.fighting = True
         if len(fighters) <= 1:  # If you're the only able fighter in the room
             self.caller.msg("There's nobody here to fight!")
             return
@@ -812,6 +930,39 @@ class CmdCombatHelp(CmdHelp):
             super().func()  # Call the default help command
 
 
+class CmdFlee(Command):
+    """
+    You do not attack, but attempt to escape.
+
+    Usage:
+      flee
+
+    Ends your turn early and signals that you're trying to run away.
+    """
+
+    key = "flee"
+    aliases = ["escape"]
+    help_category = "combat"
+
+    def func(self):
+        """
+        This performs the actual command.
+        """
+        if not is_in_combat(self.caller):  # If you're not in combat
+            self.caller.msg("You can only do that in combat. (see: help fight)")
+            return
+
+        if not is_turn(self.caller):  # If it's not your turn
+            self.caller.msg("You can only do that on your turn.")
+            return
+
+        self.caller.location.msg_contents("%s tries to run away." % self.caller)
+        spend_action(self.caller, "all", action_name="flee")  # Spend all remaining actions.
+        """
+        The action_name kwarg sets the character's last action to "disengage", which is checked by
+        the turn handler script to see if all fighters have disengaged.
+        """
+
 class BattleCmdSet(default_cmds.CharacterCmdSet):
     """
     This command set includes all the commmands used in the battle system.
@@ -829,3 +980,4 @@ class BattleCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdPass())
         self.add(CmdDisengage())
         self.add(CmdCombatHelp())
+        self.add(CmdFlee())
