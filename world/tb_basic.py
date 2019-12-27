@@ -121,7 +121,7 @@ def get_attack(attacker, defender):
     bonus = calc_bonus(attacker.db.stats['str'])
     attack_roll = randint(1, 20)
     attack_value = (attack_roll + bonus) if attack_roll > 0 else 1
-    attacker.location.msg_contents(f"{attacker.db.praenomen} rolls an {attack_roll} and gets {attack_value} with the bonus")
+#    attacker.location.msg_contents(f"{attacker.db.praenomen} rolls an {attack_roll} and gets {attack_value} with the bonus")
     return (attack_roll,attack_value)
 
 
@@ -171,13 +171,14 @@ def get_damage(attacker, defender):
         Again, this can be expanded upon.
     """
     # Changed damage to 5e unarmed values to match lower hp values
+    good_hand = attacker.db.handedness
     weapon = False
     stuff = attacker.contents
     for thing in stuff:
         if thing.db.held:
-            if thing.db.damage:
+            if thing.db.damage and thing.db.held == good_hand:
                 weapon = thing
-                attacker.location.msg_contents(f"|gWEAPON|n")
+#                attacker.location.msg_contents(f"|gWEAPON|n")
     bonus = calc_bonus(attacker.db.stats['str'])
     if weapon:
         damage_value = randint(1,weapon.db.damage) + bonus
@@ -219,7 +220,8 @@ def at_defeat(defeated):
     # adding the following line to deal with dumb workaround to limit number
     # of initial combatants
     defeated.db.fighting = False
-    defeated.location.msg_contents("|w%s has been defeated!|n" % defeated)
+    defeated.location.msg_contents(f"|c%s|n |rest vict{'a' if defeated.db.gender == 1 else 'us' if defeated.db.gender == 2 else 'um'}!|n" % defeated,exclude=defeated)
+    defeated.msg(f"|rTu es vict{'a' if defeated.db.gender == 1 else 'us' if defeated.db.gender == 2 else 'um'}!|n")
 
 
 def resolve_attack(attacker, defender, attack_value=None, defense_value=None):
@@ -235,6 +237,18 @@ def resolve_attack(attacker, defender, attack_value=None, defense_value=None):
         extremely simply, they are separated out into their own functions
         so that they are easier to expand upon.
     """
+    # get the attacker's weapon
+    good_hand = attacker.db.handedness
+    has_weapon = False
+    stuff = attacker.contents
+    weapon = ''
+    for thing in stuff:
+        if thing.db.held:
+            if thing.db.held == good_hand:
+                weapon = thing.db.abl_sg
+    if not weapon:
+        weapon = 'manu'
+
     # Get an attack roll from the attacker.
     if not attack_value:
         attack_roll,attack_value = get_attack(attacker, defender)
@@ -242,17 +256,20 @@ def resolve_attack(attacker, defender, attack_value=None, defense_value=None):
     if not defense_value:
         defense_value = get_defense(attacker, defender)
     # If the attack value is lower than the defense value, miss. Otherwise, hit.
-    if attack_value < defense_value or attack_roll == 1:
-        attacker.location.msg_contents("%s's attack |cmisses|n %s!" % (attacker, defender))
+    if (attack_value < defense_value or attack_roll == 1) and attack_roll != 20:
+        attacker.location.msg_contents("|c%s|n |c%s|n |w%s|n |gnon percussit|n!" % (attacker, defender.db.acc_sg,weapon),exclude=(attacker,defender))
+        attacker.msg("|cTu|n |y%s|n |w%s|n |rnon percussisti|n!" % (defender.db.acc_sg,weapon))
+        defender.msg("|y%s|n te |w%s|n |gnon percussit|n!" % (attacker,weapon))
     else:
         if attack_roll == 20:
             damage_value = 2 * (get_damage(attacker, defender))  # Calculate damage value.
         else:
             damage_value = get_damage(attacker, defender)  # Calculate damage value.
         # Announce damage dealt and apply damage.
-        attacker.location.msg_contents(
-            "%s hits %s for |r%i|n damage!" % (attacker, defender, damage_value)
-        )
+        attacker.location.msg_contents("|c%s|n |c%s|n |w%s|n |rpercussit|n!" % (attacker, defender.db.acc_sg,weapon),exclude=(attacker,defender))
+        attacker.msg("|cTu|n |y%s|n |w%s|n |gpercussisti|n!" % (defender.db.acc_sg,weapon))
+        defender.msg("|y%s|n te |w%s|n |rpercussit|n!" % (attacker,weapon))
+        
         apply_damage(defender, damage_value)
         # If defender HP is reduced to 0 or less, call at_defeat.
         # Adjusting so that script recognizes my hp syntax
@@ -383,11 +400,11 @@ class TBBasicCharacter(DefaultCharacter):
         """
         # Keep the character from moving if at 0 HP or in combat.
         if is_in_combat(self):
-            self.msg("You can't exit a room while in combat!")
+            self.msg("Tibi pugnanti discedere non licet!")
             return False  # Returning false keeps the character from moving.
         # Adjusting so that the script recognizes my hp
         if self.db.hp['current'] <= 0:
-            self.msg("You can't move, you've been defeated!")
+            self.msg(f"Tu discedere non potes: es vict{'a' if self.db.gender == 1 else 'us' if self.db.gender == 2 else 'um'}!")
             # adding the following to deal with dumb workaround for limiting
             # initial number of fighters
             self.db.fighting = False
@@ -444,7 +461,7 @@ class TBBasicTurnHandler(DefaultScript):
         self.db.fighters = ordered_by_roll
 
         # Announce the turn order.
-        self.obj.msg_contents("Turn order is: %s " % ", ".join(obj.key for obj in self.db.fighters))
+        self.obj.msg_contents("|wOrdo pugnandi:|n %s " % ", ".join(obj.key for obj in self.db.fighters))
 
         # Start first fighter's turn.
         self.start_turn(self.db.fighters[0])
@@ -541,7 +558,7 @@ class TBBasicTurnHandler(DefaultScript):
         character.db.combat_actionsleft = ACTIONS_PER_TURN  # Replenish actions
         # Prompt the character for their turn and give some information.
         # Adjusting so script understands my hp syntax
-        character.msg("|wIt's your turn! You have %i HP remaining.|n" % character.db.hp['current'])
+        character.msg("|wNunc tibi agere licet! Vita: |c%i|n|w.|n" % character.db.hp['current'])
 
     def next_turn(self):
         """
@@ -556,7 +573,7 @@ class TBBasicTurnHandler(DefaultScript):
             ):  # If a character has done anything but disengage
                 disengage_check = False
         if disengage_check:  # All characters have disengaged
-            self.obj.msg_contents("|gAll fighters have disengaged! Combat is over!|n")
+            self.obj.msg_contents("|wOmnes cesserunt! Pugna peracta est!|n")
             # added this next line to remove the 'fighting' attribute
             for fighter in self.db.fighters:
                 fighter.db.fighting = False
@@ -571,11 +588,11 @@ class TBBasicTurnHandler(DefaultScript):
             if fighter.db.combat_lastaction == 'flee':
                 cowards.append(fighter)
                 fighter.db.combat_lastaction = 'null'
-                fighter.location.msg_contents(f"cowards: {cowards}; hostiles: {hostiles}!")
+#                fighter.location.msg_contents(f"cowards: {cowards}; hostiles: {hostiles}!")
             else:
                 if fighter.db.hp['current'] > 0:
                     hostiles.append(fighter)
-                    fighter.location.msg_contents(f"cowards: {cowards}; hostiles: {hostiles}!")
+#                    fighter.location.msg_contents(f"cowards: {cowards}; hostiles: {hostiles}!")
         if len(cowards) == 0:
             flee_check = False
         if flee_check:
@@ -588,22 +605,23 @@ class TBBasicTurnHandler(DefaultScript):
                 coward = cowards[0]
                 bonus = calc_bonus(coward.db.stats['dex'])
                 coward_dex_check = randint(1,20) + bonus
-                coward.location.msg_contents(f"{coward} rolls a {coward_dex_check}, trying to |cflee|n!")
+#                coward.location.msg_contents(f"{coward} rolls a {coward_dex_check}, trying to |cflee|n!")
                 for hostile in hostiles:
                     bonus = calc_bonus(hostile.db.stats['dex'])
                     hostile_dex_check = randint(1,20) + bonus
-                    hostile.location.msg_contents(f"{hostile} rolled a {hostile_dex_check}!")
+#                    hostile.location.msg_contents(f"{hostile} rolled a {hostile_dex_check}!")
                     if hostile_dex_check > coward_dex_check:
                         flee_check = False
-                        coward.location.msg_contents('|cFlight failed!|n')
+                        coward.location.msg_contents('|rFugere non potes!|n')
                         break
                 if flee_check:
-                    coward.location.msg_contents("Flight successful!")
+                    coward.location.msg_contents(f"|r{coward} fugit|n!",exclude=coward)
+                    coward.msg("|gFugisti|n!")
                     exits = [
                             o for o in coward.location.contents if o.destination
                             ]
                     escape = choice(exits)
-                    coward.location.msg_contents(f"{escape.destination}")
+#                    coward.location.msg_contents(f"{escape.destination}")
                     combat_cleanup(coward)
                     self.db.fighters.remove(coward)
                     escape.at_traverse(coward,escape.destination)
@@ -625,7 +643,8 @@ class TBBasicTurnHandler(DefaultScript):
                 # Adjusting so that script recognizes my hp syntax
                 if fighter.db.hp['current'] != 0:
                     LastStanding = fighter  # Pick the one fighter left with HP remaining
-            self.obj.msg_contents("|gOnly %s remains! Combat is over!|n" % LastStanding)
+            self.obj.msg_contents(f"|c%s|n |west vict{'rix' if LastStanding.db.gender == 1 else 'or'}! Pugna est peracta!|n" % LastStanding,exclude=LastStanding)
+            LastStanding.msg(f"|gTu vicisti!! Pugna est peracta!|n")
             self.stop()  # Stop this script and end combat.
             # added the following to deal with my dumb work around to limit
             # number of initial fighters
@@ -640,7 +659,7 @@ class TBBasicTurnHandler(DefaultScript):
         newchar = self.db.fighters[self.db.turn]  # Note the new character
         self.db.timer = TURN_TIMEOUT + self.time_until_next_repeat()  # Reset the timer.
         self.db.timeout_warning_given = False  # Reset the timeout warning.
-        self.obj.msg_contents("%s's turn ends - %s's turn begins!" % (currentchar, newchar))
+#        self.obj.msg_contents("%s tempus egit - nunc  %s agere licet!" % (currentchar, newchar.db.dat_sg))
         self.start_turn(newchar)  # Start the new character's turn.
 
     def turn_end_check(self, character):
@@ -897,15 +916,14 @@ class CmdPass(Command):
     Passes on your turn.
 
     Usage:
-      pass
+      exspecta
 
     When in a fight, you can use this command to end your turn early, even
     if there are still any actions you can take.
     """
 
-    key = "pass"
-    aliases = ["wait", "hold"]
-    help_category = "combat"
+    key = "exspecta"
+    help_category = "pugna"
 
     def func(self):
         """
@@ -916,12 +934,11 @@ class CmdPass(Command):
             return
 
         if not is_turn(self.caller):  # Can only pass if it's your turn.
-            self.caller.msg("You can only do that on your turn.")
+#            self.caller.msg("You can only do that on your turn.")
             return
 
-        self.caller.location.msg_contents(
-            "%s takes no further action, passing the turn." % self.caller
-        )
+        self.caller.location.msg_contents("|c%s|n nihil egit." % self.caller, exclude=self.caller)
+        self.caller.msg('Tu nihil egisti.')
         spend_action(self.caller, "all", action_name="pass")  # Spend all remaining actions.
 
 
@@ -930,16 +947,15 @@ class CmdDisengage(Command):
     Passes your turn and attempts to end combat.
 
     Usage:
-      disengage
+      cede
 
     Ends your turn early and signals that you're trying to end
     the fight. If all participants in a fight disengage, the
     fight ends.
     """
 
-    key = "disengage"
-    aliases = ["spare"]
-    help_category = "combat"
+    key = "cede"
+    help_category = "pugna"
 
     def func(self):
         """
@@ -950,10 +966,11 @@ class CmdDisengage(Command):
             return
 
         if not is_turn(self.caller):  # If it's not your turn
-            self.caller.msg("You can only do that on your turn.")
+#            self.caller.msg("You can only do that on your turn.")
             return
 
-        self.caller.location.msg_contents("%s disengages, ready to stop fighting." % self.caller)
+        self.caller.location.msg_contents("|c%s|n |ycessit: pugnare non vult|n." % self.caller, exclude=self.caller)
+        self.caller.msg("|yCessisti|n.")
         spend_action(self.caller, "all", action_name="disengage")  # Spend all remaining actions.
         """
         The action_name kwarg sets the character's last action to "disengage", which is checked by
@@ -966,25 +983,26 @@ class CmdRest(Command):
     Recovers damage.
 
     Usage:
-      rest
+      requiesce
 
     Resting recovers your HP to its maximum, but you can only
     rest if you're not in a fight.
     """
 
-    key = "rest"
-    help_category = "combat"
+    key = "requiesce"
+    help_category = "pugna"
 
     def func(self):
         "This performs the actual command."
 
         if is_in_combat(self.caller):  # If you're in combat
-            self.caller.msg("You can't rest while you're in combat.")
+            self.caller.msg("Tibi pugnanti requiescere non licet.")
             return
 
         # Adjusting so it recognizes the syntax of my hp
         self.caller.db.hp['current'] = self.caller.db.hp['max']  # Set current HP to maximum
-        self.caller.location.msg_contents("%s rests to recover HP." % self.caller)
+        self.caller.location.msg_contents("|c%s|n requievit ut vitam reficeret." % self.caller,exclude=self.caller)
+        self.caller.msg("Requievisti ut vitam reficeres.")
         """
         You'll probably want to replace this with your own system for recovering HP.
         """
@@ -1010,9 +1028,10 @@ class CmdCombatHelp(CmdHelp):
         if is_in_combat(self.caller) and not self.args:  # In combat and entered 'help' alone
             self.caller.msg(
                 "Available combat commands:|/"
-                + "|wAttack:|n Attack a target, attempting to deal damage.|/"
-                + "|wPass:|n Pass your turn without further action.|/"
-                + "|wDisengage:|n End your turn and attempt to end combat.|/"
+                + "|wPete:|n Attack a target, attempting to deal damage.|/"
+                + "|wExspecta:|n Pass your turn without further action.|/"
+                + "|wCede:|n End your turn and attempt to end combat.|/"
+                + "|wFug:|n End your turn and attempt to run away.|/"
             )
         else:
             super().func()  # Call the default help command
@@ -1023,14 +1042,13 @@ class CmdFlee(Command):
     You do not attack, but attempt to escape.
 
     Usage:
-      flee
+      fug
 
     Ends your turn early and signals that you're trying to run away.
     """
 
-    key = "flee"
-    aliases = ["escape"]
-    help_category = "combat"
+    key = "fug"
+    help_category = "pugna"
 
     def func(self):
         """
@@ -1041,10 +1059,11 @@ class CmdFlee(Command):
             return
 
         if not is_turn(self.caller):  # If it's not your turn
-            self.caller.msg("You can only do that on your turn.")
+#            self.caller.msg("You can only do that on your turn.")
             return
 
-        self.caller.location.msg_contents("%s tries to run away." % self.caller)
+        self.caller.location.msg_contents("|c%s|n fugere conatur!" % self.caller,exclude=self.caller)
+        self.caller.msg("|cFugere conaris|n!")
         spend_action(self.caller, "all", action_name="flee")  # Spend all remaining actions.
         """
         The action_name kwarg sets the character's last action to "disengage", which is checked by
