@@ -285,7 +285,7 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
 
         self.name = self.praenomen + ' ' + self.nomen
 
-        self.msg(f"You are about to freate a character named {self.name}")
+        self.msg(f"You are about to create a character named {self.name}")
         
         typeclass = settings.BASE_CHARACTER_TYPECLASS
 

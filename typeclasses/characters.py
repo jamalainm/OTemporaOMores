@@ -105,12 +105,17 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
         # first calculate the bonus
 
         bonus = self.db.stats['con']
-        if bonus % 2 != 0:
-            bonus -= 1
-        bonus -= 10
-        bonus /= 2
-        starting_hp = 10 + int(bonus)
-        self.db.hp = {'max':starting_hp,'current':starting_hp}
+        bonus = (bonus - 11) if bonus % 2 else (bonus - 10)
+        max_hp = (10 + bonus) if (10 + bonus) > 0 else 1
+        self.db.hp = {'max':max_hp,"current":max_hp}
+#        if bonus % 2 != 0:
+#            bonus -= 1
+#        bonus -= 10
+#        bonus /= 2
+#        starting_hp = 10 + int(bonus)
+#        if starting_hp <= 0:
+#            starting_hp = 1
+#        self.db.hp = {'max':starting_hp,'current':starting_hp}
 
         # lifting/carrying
 
