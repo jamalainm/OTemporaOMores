@@ -144,13 +144,13 @@ class CmdMakeLatinObject(Command):
         obj = create_object('typeclasses.objects.Object',
                 key = nominative,
                 location = caller.location,
-                attributes=[('gender',gender),('nom_sg',nominative),('gen_sg',genitive)],
+                attributes=[('gender',gender),('nom_sg',[nominative]),('gen_sg',[genitive])],
                 )
 
         # Announce object's creation
         message = "%s created an object called %s"
-        caller.msg(message % ('You', obj.db.nom_sg))
-        caller.location.msg_contents(message % (caller.key, obj.db.nom_sg),exclude=caller)
+        caller.msg(message % ('You', obj.db.nom_sg[0]))
+        caller.location.msg_contents(message % (caller.key, obj.db.nom_sg[0]),exclude=caller)
 
 class CmdMakeLatinCharacter(Command):
     """
@@ -231,13 +231,13 @@ class CmdMakeLatinCharacter(Command):
         obj = create_object('typeclasses.characters.Character',
                 key = nominative,
                 location = caller.location,
-                attributes=[('gender',gender),('nom_sg',nominative),('gen_sg',genitive)],
+                attributes=[('gender',gender),('nom_sg',[nominative]),('gen_sg',[genitive])],
                 )
 
         # Announce object's creation
         message = "%s created an character called %s"
-        caller.msg(message % ('You', obj.db.nom_sg))
-        caller.location.msg_contents(message % (caller.key, obj.db.nom_sg),exclude=caller)
+        caller.msg(message % ('You', obj.db.nom_sg[0]))
+        caller.location.msg_contents(message % (caller.key, obj.db.nom_sg[0]),exclude=caller)
 
 class CmdMakeLatinRoom(ObjManipCommand):
     """
@@ -307,7 +307,7 @@ class CmdMakeLatinRoom(ObjManipCommand):
         # taking out the "create" before the "create_object"
         # new_room = create.create_object(
         new_room = create_object(
-            typeclass, room["name"], attributes=[('gender',gender),('nom_sg',nominative),('gen_sg',genitive)], report_to=caller
+            typeclass, room["name"], attributes=[('gender',gender),('nom_sg',[nominative]),('gen_sg',[genitive])], report_to=caller
         )
         lockstring = self.new_room_lockstring.format(id=caller.id)
         new_room.locks.add(lockstring)

@@ -103,9 +103,10 @@ class MuxCommand(muxcommand.MuxCommand):
         """
 #        "called after self.func()."
         caller = self.caller
-        prompt = "\n|wVita: %i/%i) |n" % (caller.db.hp['current'],caller.db.hp['max'])
+        if caller.db.hp:
+            prompt = "\n|wVita: %i/%i) |n" % (caller.db.hp['current'],caller.db.hp['max'])
 
-        caller.msg(prompt=prompt)
+            caller.msg(prompt=prompt)
 #         pass
 #
 #     def parse(self):

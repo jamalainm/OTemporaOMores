@@ -26,8 +26,8 @@ new_character = create.create_object(
             ('pedigree',self.pedigree),
             ('praenomen',self.praenomen),
             ('nomen',self.nomen),
-            ('nom_sg',self.praenomen),
-            ('gen_sg',self.genitive),
+            ('nom_sg',[self.praenomen]),
+            ('gen_sg',[self.genitive]),
             ('stats', self.stats)
             ]
 )

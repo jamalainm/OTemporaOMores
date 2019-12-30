@@ -297,13 +297,18 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
             return
 
         # create the character
-        start_location = ObjectDB.objects.get_id(settings.START_LOCATION)
+#        start_location = ObjectDB.objects.get_id(settings.START_LOCATION)
         default_home = ObjectDB.objects.get_id(settings.DEFAULT_HOME)
+        self.msg("Before assigning permissions")
         permissions = settings.PERMISSION_ACCOUNT_DEFAULT
+        self.msg("after assigning permissions")
+        nom_list = [self.praenomen]
+        gen_list = [self.genitive]
+        self.msg(f"nom: {nom_list}; gen: {gen_list}")
         new_character = create.create_object(
                 typeclass, 
                 key=self.name, 
-                location=start_location, 
+#                location=start_location, 
                 home=default_home, 
                 permissions=permissions,
                 attributes=[
@@ -311,8 +316,8 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
                     ('gender',self.gender),
                     ('praenomen',self.praenomen),
                     ('nomen',self.nomen),
-                    ('nom_sg',self.praenomen),
-                    ('gen_sg',self.genitive),
+                    ('nom_sg',nom_list),
+                    ('gen_sg',gen_list),
                     ('stats', {'str':self.stats[0],'dex':self.stats[1],'con':self.stats[2],'int':self.stats[3],'wis':self.stats[4],'cha':self.stats[5]})
                     ]
         )

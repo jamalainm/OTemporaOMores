@@ -49,6 +49,8 @@ MULTISESSION_MODE = 2
 MAX_NR_CHARACTERS = 5
 DEBUG = True
 INSTALLED_APPS += ('web.chargen','nocaptcha_recaptcha')
+#START_LOCATION = '#249'
+DEFAULT_HOME = '#249'
 ######################################################################
 # Settings given in secret_settings.py override those in this file.
 ######################################################################

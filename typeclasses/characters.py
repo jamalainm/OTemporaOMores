@@ -51,20 +51,20 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
 
         # add all of the case endings to attributes
 
-        word = DeclineNoun(self.db.nom_sg,self.db.gen_sg,self.db.gender)
+        word = DeclineNoun(self.db.nom_sg[0],self.db.gen_sg[0],self.db.gender)
         forms = word.make_paradigm()
         all_forms = forms
         forms = forms[2:]
-        self.db.dat_sg = forms[0][1]
-        self.db.acc_sg = forms[1][1]
-        self.db.abl_sg = forms[2][1]
-        self.db.voc_sg = forms[3][1]
-        self.db.nom_pl = forms[4][1]
-        self.db.gen_pl = forms[5][1]
-        self.db.dat_pl = forms[6][1]
-        self.db.acc_pl = forms[7][1]
-        self.db.abl_pl = forms[8][1]
-        self.db.voc_pl = forms[9][1]
+        self.db.dat_sg = [forms[0][1]]
+        self.db.acc_sg = [forms[1][1]]
+        self.db.abl_sg = [forms[2][1]]
+        self.db.voc_sg = [forms[3][1]]
+        self.db.nom_pl = [forms[4][1]]
+        self.db.gen_pl = [forms[5][1]]
+        self.db.dat_pl = [forms[6][1]]
+        self.db.acc_pl = [forms[7][1]]
+        self.db.abl_pl = [forms[8][1]]
+        self.db.voc_pl = [forms[9][1]]
 
         # Add the variant forms to aliases for easy interaction
         for form in all_forms:
@@ -130,8 +130,8 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
                 attributes=[
                     ('gender','3'),
                     ('clothing_type','underpants'),
-                    ('nom_sg','subligaculum'),
-                    ('gen_sg','subligaculi'),
+                    ('nom_sg',['subligaculum']),
+                    ('gen_sg',['subligaculi']),
                     ('worn',True),
                     ('desc','Briefs'),
                     ('physical',{'material':'linen','rigid':False,'volume':0.5,'mass':0.45})
@@ -146,8 +146,8 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
                     attributes=[
                         ('gender','3'),
                         ('clothing_type','undershirt'),
-                        ('nom_sg','strophium'),
-                        ('gen_sg','strophii'),
+                        ('nom_sg',['strophium']),
+                        ('gen_sg',['strophii']),
                         ('worn',True),
                         ('desc','A bandeau'),
                         ('physical',{'material':'linen','rigid':False,'volume':0.5,'mass':0.45})
@@ -191,9 +191,14 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
     #making a new get_display_name that is aware of case and not
     # dependent on the key of the object
     def get_display_name(self, looker, **kwargs):
-        if self.locks.check_lockstring(looker, "perm(Builder)"):
-            return "{}(#{})".format(self.db.nom_sg, self.id)
-        return self.db.nom_sg
+        if not self.db.nom_sg:
+            if self.locks.check_lockstring(looker, "perm(Builder)"):
+                return "{}(#{})".format(self.key, self.id)
+            return self.key
+        else:
+            if self.locks.check_lockstring(looker, "perm(Builder)"):
+                return "{}(#{})".format(self.db.nom_sg[0], self.id)
+            return self.db.nom_sg[0]
 
     def announce_move_from(self, destination, msg=None, mapping=None):
         """
@@ -275,8 +280,8 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
         # error checking
         self.location.msg(source_location)
         if source_location:
-            origin = source_location.db.abl_sg
-            string = msg or f"{self.db.nom_sg} ab {source_location.db.abl_sg} venit."
+            origin = source_location.db.abl_sg[0]
+            string = msg or f"{self.db.nom_sg[0]} ab {source_location.db.abl_sg[0]} venit."
         else:
             string = "{character} venit."
 
@@ -519,7 +524,7 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
             if garment.db.worn is True:
                 # JI (12/7/19) append the accusative name to the description,
                 # since these will be direct objects
-                worn_string_list.append(garment.db.acc_sg)
+                worn_string_list.append(garment.db.acc_sg[0])
             # Otherwise, append the name and the string value of 'worn'
             elif garment.db.worn:
                 worn_string_list.append("%s %s" % (garment.name, garment.db.worn))
@@ -528,7 +533,7 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
         held_list = []
         for possession in possessions:
             if possession.db.held:
-                held_list.append(possession.db.acc_sg)
+                held_list.append(possession.db.acc_sg[0])
         if desc:
             string += "%s" % desc
         # Append held items.

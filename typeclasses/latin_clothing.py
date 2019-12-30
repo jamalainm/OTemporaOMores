@@ -317,7 +317,7 @@ class Clothing(Object):
                 ):
                     to_cover.append(garment)
                     # JI (12/7/19) list of ablative forms
-                    to_cover_ablative.append(garment.db.abl_sg)
+                    to_cover_ablative.append(garment.db.abl_sg[0])
                     garment.db.covered_by = self
         # Return if quiet
         if quiet:
@@ -325,14 +325,14 @@ class Clothing(Object):
         # Echo a message to the room
         # JI (12/7/19) Translated message for putting something one. But this
         # returns the same message to caller and room
-        message = "%s %s induit" % (wearer, self.db.acc_sg)
+        message = "%s %s induit" % (wearer, self.db.acc_sg[0])
         if wearstyle is not True:
             message = "%s wears %s %s" % (wearer, self.name, wearstyle)
         if to_cover:
             # JI (12/7/19) Translated message for covering something
             message = message + ", %s tect%s" % (LatinNoun.list_to_string(to_cover_ablative), 'is' if len(to_cover) > 1 else 'a' if to_cover[0].db.gender == 1 else 'o')
         wearer.location.msg_contents(message + ".", exclude=wearer)
-        wearer.msg(f"{self.db.acc_sg} induisti.")
+        wearer.msg(f"{self.db.acc_sg[0]} induisti.")
 
         self.db.held = False
 
@@ -366,7 +366,7 @@ class Clothing(Object):
 
         self.db.worn = False
         # JI (12/7/2019) Translated Message to Latin
-        remove_message = "%s %s exuit." % (wearer, self.db.acc_sg)
+        remove_message = "%s %s exuit." % (wearer, self.db.acc_sg[0])
         uncovered_list = []
         # JI (12/7/19) List to hold ablative forms
         uncovered_list_ablative = []
@@ -379,12 +379,12 @@ class Clothing(Object):
                 # JI (12/9/19) changing the following from thing.name to thing
                 uncovered_list.append(thing)
                 # JI (12/7/19) Add to list of ablative forms
-                uncovered_list_ablative.append(thing.db.abl_sg)
+                uncovered_list_ablative.append(thing.db.abl_sg[0])
         if len(uncovered_list) > 0:
             # JI (12/7/2019) Translated message to Latin
             remove_message = "%s %s exuit, %s apert%s." % (
                 wearer,
-                self.db.acc_sg,
+                self.db.acc_sg[0],
                 # JI (12/7/19) changed list to ablative forms
                 LatinNoun.list_to_string(uncovered_list_ablative),
                 # JI (12/7/19) select the proper ending for "having been revealed"
@@ -393,7 +393,7 @@ class Clothing(Object):
         # Echo a message to the room
         if not quiet:
             wearer.location.msg_contents(remove_message, exclude=wearer)
-            wearer.msg(f"{self.db.acc_sg} exuisti.")
+            wearer.msg(f"{self.db.acc_sg[0]} exuisti.")
 
         if held_items:
             hands.remove(held_items[0].db.held)
@@ -445,7 +445,7 @@ class ClothedCharacter(DefaultCharacter):
             if garment.db.worn is True:
                 # JI (12/7/19) append the accusative name to the description,
                 # since these will be direct objects
-                worn_string_list.append(garment.db.acc_sg)
+                worn_string_list.append(garment.db.acc_sg[0])
             # Otherwise, append the name and the string value of 'worn'
             elif garment.db.worn:
                 worn_string_list.append("%s %s" % (garment.name, garment.db.worn))
@@ -528,7 +528,7 @@ class CmdWear(MuxCommand):
 
         if clothing.db.worn and len(self.arglist) == 1:
             # JI (12/7/19) Adapting to Latin
-            self.caller.msg("Iam %s geris!" % clothing.db.acc_sg)
+            self.caller.msg("Iam %s geris!" % clothing.db.acc_sg[0])
             return
         if len(self.arglist) > 1:  # If wearstyle arguments given
             wearstyle_list = self.arglist  # Split arguments into a list of words
@@ -546,8 +546,9 @@ class CmdWear(MuxCommand):
             else:
                 wearstyle = wearstring
         # JI (12/7/19) Make sure grammar happens:
-        if clothing.db.acc_sg != self.args:
-            self.caller.msg(f"(Did you mean '{clothing.db.acc_sg}')")
+        lower_case = [x.lower() for x in clothing.db.acc_sg]
+        if self.args not in lower_case:
+            self.caller.msg(f"(Did you mean '{clothing.db.acc_sg[0]}')")
             return
         clothing.wear(self.caller, wearstyle)
 
@@ -590,11 +591,12 @@ class CmdRemove(MuxCommand):
             return
         if clothing.db.covered_by:
             # adapted to Latin
-            self.caller.msg("prius tibi est necesse %s exuere." % clothing.db.covered_by.db.acc_sg)
+            self.caller.msg("prius tibi est necesse %s exuere." % clothing.db.covered_by.db.acc_sg[0])
             return
         # JI (12/7/19) Ensure proper grammer
-        if clothing.db.acc_sg != self.args:
-            self.caller.msg(f"(Did you mean '{clothing.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in clothing.db.acc_sg]
+        if self.args.lower() not in lower_case:
+            self.caller.msg(f"(Did you mean '{clothing.db.acc_sg[0]}'?)")
             return
         clothing.remove(self.caller)
 
@@ -753,8 +755,9 @@ class CmdDrop(MuxCommand):
             caller.msg("You can't drop that because it's covered by %s." % obj.db.covered_by)
             return
         # JI (12/7/19) Make sure grammar is followed
-        if self.args != obj.db.acc_sg:
-            caller.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in obj.db.acc_sg]
+        if self.args.lower() not in lower_case:
+            caller.msg(f"(Did you mean '{obj.db.acc_sg[0]}'?)")
             return
         # Remove clothes if they're dropped.
         if obj.db.worn:
@@ -762,8 +765,8 @@ class CmdDrop(MuxCommand):
 
         obj.move_to(caller.location, quiet=True)
         # JI (12/7/19) Adapting to Latin
-        caller.msg("%s reliquisti." % (obj.db.acc_sg,))
-        caller.location.msg_contents("%s %s reliquit." % (caller.db.nom_sg, obj.db.acc_sg), exclude=caller)
+        caller.msg("%s reliquisti." % (obj.db.acc_sg[0],))
+        caller.location.msg_contents("%s %s reliquit." % (caller.db.nom_sg[0], obj.db.acc_sg[0]), exclude=caller)
         # Call the object script's at_drop() method.
         obj.at_drop(caller)
 
@@ -857,13 +860,13 @@ class CmdInventory(MuxCommand):
         wear_table = evtable.EvTable(border="header")
         for item in items:
             if not item.db.worn:
-                carry_table.add_row("|C%s|n" % item.db.acc_sg, '(dextra)' if item.db.held == 'right' else '(sinistra)', item.db.desc or "")
+                carry_table.add_row("|C%s|n" % item.db.acc_sg[0], '(dextra)' if item.db.held == 'right' else '(sinistra)', item.db.desc or "")
         if carry_table.nrows == 0:
             carry_table.add_row("|CNihil.|n", "")
         string = "|wTenes:\n%s" % carry_table
         for item in items:
             if item.db.worn:
-                wear_table.add_row("|C%s|n" % item.db.acc_sg, item.db.desc or "")
+                wear_table.add_row("|C%s|n" % item.db.acc_sg[0], item.db.desc or "")
         if wear_table.nrows == 0:
             wear_table.add_row("|CNihil.|n", "")
         string += "|/|wGeris:\n%s" % wear_table

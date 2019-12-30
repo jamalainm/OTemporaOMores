@@ -143,9 +143,15 @@ class LatinNoun(DefaultObject):
         """
         key = kwargs.get("key", self.key)
         key = ansi.ANSIString(key) # This is needed to allow inflection of colored names
-        plural = self.db.nom_pl
+        if self.db.nom_pl:
+            plural = self.db.nom_pl[0]
+        else:
+            plural = self.key
         plural = "%s %s" % (count, plural)
-        singular = self.db.nom_sg
+        if self.db.nom_sg:
+            singular = self.db.nom_sg[0]
+        else:
+            singular = self.key
         if not self.aliases.get(plural, category="plural_key"):
             # We need to wipe any old plurals/an/a in case key changed in the interim
             self.aliases.clear(category="plural_key")

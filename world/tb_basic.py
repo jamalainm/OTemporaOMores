@@ -46,6 +46,7 @@ from random import choice
 from random import randint
 from random import random
 from evennia import DefaultCharacter, Command, default_cmds, DefaultScript
+from commands.command import MuxCommand
 from evennia.commands.default.help import CmdHelp
 # adding the following to begin translation into Latin
 from commands.latin_commands import which_one
@@ -245,7 +246,7 @@ def resolve_attack(attacker, defender, attack_value=None, defense_value=None):
     for thing in stuff:
         if thing.db.held:
             if thing.db.held == good_hand:
-                weapon = thing.db.abl_sg
+                weapon = thing.db.abl_sg[0]
     if not weapon:
         weapon = 'manu'
 
@@ -257,18 +258,21 @@ def resolve_attack(attacker, defender, attack_value=None, defense_value=None):
         defense_value = get_defense(attacker, defender)
     # If the attack value is lower than the defense value, miss. Otherwise, hit.
     if (attack_value < defense_value or attack_roll == 1) and attack_roll != 20:
-        attacker.location.msg_contents("|c%s|n |c%s|n |w%s|n |gnon percussit|n!" % (attacker, defender.db.acc_sg,weapon),exclude=(attacker,defender))
-        attacker.msg("|cTu|n |y%s|n |w%s|n |rnon percussisti|n!" % (defender.db.acc_sg,weapon))
-        defender.msg("|y%s|n te |w%s|n |gnon percussit|n!" % (attacker,weapon))
+        attacker.location.msg_contents("|c%s|n |C%s|n |w%s|n |gnon percussit|n!" % (attacker.db.nom_sg[0], defender.db.acc_sg[0],weapon),exclude=(attacker,defender))
+        attacker.msg("|cTu|n |C%s|n |w%s|n |rnon percussisti|n!" % (defender.db.acc_sg[0],weapon))
+        defender.msg("|C%s|n |cte|n |w%s|n |gnon percussit|n!" % (attacker,weapon))
     else:
         if attack_roll == 20:
             damage_value = 2 * (get_damage(attacker, defender))  # Calculate damage value.
+            attacker.location.msg_contents("|c%s|n |C%s|n |w%s|n |r QUAM FORTISSIME percussit|n!" % (attacker.db.nom_sg[0], defender.db.acc_sg[0],weapon),exclude=(attacker,defender))
+            attacker.msg("|cTu|n |C%s|n |w%s|n |g QUAM FORTISSIME percussisti|n!" % (defender.db.acc_sg[0],weapon))
+            defender.msg("|C%s|n |cte|n |w%s|n |r QUAM FORTISSIME percussit|n!" % (attacker,weapon))
         else:
             damage_value = get_damage(attacker, defender)  # Calculate damage value.
         # Announce damage dealt and apply damage.
-        attacker.location.msg_contents("|c%s|n |c%s|n |w%s|n |rpercussit|n!" % (attacker, defender.db.acc_sg,weapon),exclude=(attacker,defender))
-        attacker.msg("|cTu|n |y%s|n |w%s|n |gpercussisti|n!" % (defender.db.acc_sg,weapon))
-        defender.msg("|y%s|n te |w%s|n |rpercussit|n!" % (attacker,weapon))
+            attacker.location.msg_contents("|c%s|n |C%s|n |w%s|n |rpercussit|n!" % (attacker.db.nom_sg[0], defender.db.acc_sg[0],weapon),exclude=(attacker,defender))
+            attacker.msg("|cTu|n |C%s|n |w%s|n |gpercussisti|n!" % (defender.db.acc_sg[0],weapon))
+            defender.msg("|C%s|n |cte|n |w%s|n |rpercussit|n!" % (attacker,weapon))
         
         apply_damage(defender, damage_value)
         # If defender HP is reduced to 0 or less, call at_defeat.
@@ -461,7 +465,7 @@ class TBBasicTurnHandler(DefaultScript):
         self.db.fighters = ordered_by_roll
 
         # Announce the turn order.
-        self.obj.msg_contents("|wOrdo pugnandi:|n %s " % ", ".join(obj.key for obj in self.db.fighters))
+#        self.obj.msg_contents("|wOrdo pugnandi:|n %s " % ", ".join(obj.key for obj in self.db.fighters))
 
         # Start first fighter's turn.
         self.start_turn(self.db.fighters[0])
@@ -558,7 +562,9 @@ class TBBasicTurnHandler(DefaultScript):
         character.db.combat_actionsleft = ACTIONS_PER_TURN  # Replenish actions
         # Prompt the character for their turn and give some information.
         # Adjusting so script understands my hp syntax
-        character.msg("|wNunc tibi agere licet! Vita: |c%i|n|w.|n" % character.db.hp['current'])
+        # Adjusting the following again to make the battles a little more legible
+#        character.msg("|wNunc tibi agere licet! Vita: |c%i|n|w.|n" % character.db.hp['current'])
+        character.msg("\n|wVita: %i/%i)|n " % (character.db.hp['current'],character.db.hp['max']))
 
     def next_turn(self):
         """
@@ -698,7 +704,7 @@ COMMANDS START HERE
 """
 
 
-class CmdFight(Command):
+class CmdFight(MuxCommand):
     """
     Starts a fight with the target.
 
@@ -728,8 +734,9 @@ class CmdFight(Command):
             target, self.args = which_one(self.args,self.caller,stuff)
             if not target:
                 return
-        if self.args.strip().lower() != target.db.acc_sg.lower() and self.args:
-            self.caller.msg(f"(Did you mean '{target.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in target.db.acc_sg]
+        if self.args.strip().lower() not in lower_case and self.args:
+            self.caller.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
             return
 
         attacker = self.caller
@@ -741,12 +748,12 @@ class CmdFight(Command):
             self.caller.msg("Quem pugnare velis?")
             return
         if not defender.db.hp:
-            self.caller.msg(f"Tibi {defender.db.acc_sg} pugnare non licet!")
+            self.caller.msg(f"Tibi {defender.db.acc_sg[0]} pugnare non licet!")
             return
 
         # Adjusting so it recognizes my hp syntax
         if not defender.db.hp['current']:  # Target object has no HP left or to begin with
-            self.caller.msg(f"{defender.db.nom_sg} iam vict{'a' if defender.db.gender == 1 else 'us' if defender.db.gender == 2 else 'um'} est!")
+            self.caller.msg(f"{defender.db.nom_sg[0]} iam vict{'a' if defender.db.gender == 1 else 'us' if defender.db.gender == 2 else 'um'} est!")
             return
 
         if attacker == defender:  # Target and attacker are the same
@@ -782,8 +789,8 @@ class CmdFight(Command):
             self.caller.msg("Tu pugnam commisi!")
             here.db.combat_turnhandler.join_fight(self.caller)  # Join the fight!
             return
-        here.msg_contents("|c%s|n |c%s|n pugnare coepit!" % (self.caller,defender.db.acc_sg),exclude=(self.caller,defender))
-        self.caller.msg(f"Tu |c%s|n pugnare coepisti!" % defender.db.acc_sg)
+        here.msg_contents("|c%s|n |C%s|n pugnare coepit!" % (self.caller,defender.db.acc_sg[0]),exclude=(self.caller,defender))
+        self.caller.msg(f"Tu |c%s|n pugnare coepisti!" % defender.db.acc_sg[0])
         defender.msg(f"|c{self.caller}|n te pugnare coepit!")
         # Add a turn handler script to the room, which starts combat.
         # change to this script
@@ -791,7 +798,7 @@ class CmdFight(Command):
         # Remember you'll have to change the path to the script if you copy this code to your own modules!
 
 
-class CmdAttack(Command):
+class CmdAttack(MuxCommand):
     """
     Attacks another character.
 
@@ -821,8 +828,9 @@ class CmdAttack(Command):
             target, self.args = which_one(self.args,self.caller,stuff)
             if not target:
                 return
-        if self.args.strip().lower() != target.db.acc_sg.lower() and self.args:
-            self.caller.msg(f"(Did you mean '{target.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in target.db.acc_sg]
+        if self.args.strip().lower() not in lower_case and self.args:
+            self.caller.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
             return
 
         attacker = self.caller
@@ -834,10 +842,10 @@ class CmdAttack(Command):
 
         # Adjusting so it recognizes my hp syntax
         if not defender.db.hp:
-            self.caller.msg(f"Tibi {defender.db.acc_sg} pugnare non licet!")
+            self.caller.msg(f"Tibi {defender.db.acc_sg[0]} pugnare non licet!")
             return
         if not defender.db.hp['current']:  # Target object has no HP left or to begin with
-            self.caller.msg(f"{defender.db.nom_sg} iam vict{'a' if defender.db.gender == 1 else 'us' if defender.db.gender == 2 else 'um'} est!")           
+            self.caller.msg(f"{defender.db.nom_sg[0]} iam vict{'a' if defender.db.gender == 1 else 'us' if defender.db.gender == 2 else 'um'} est!")           
             return
 
         if attacker == defender:  # Target and attacker are the same
@@ -876,14 +884,14 @@ class CmdAttack(Command):
                     self.caller.msg("Nemo est quocum pugnare potes!")
                     return
                 if here.db.combat_turnhandler:  # If there's already a fight going on...
-                    here.msg_contents("|c%s|n pugnam cum |c%s|n commisit!" % (self.caller,defender.db.abl_sg), exclude=(self.caller,defender))
-                    self.caller.msg("Tu cum |c%s|n pugnam comisisti!" % defender.db.abl_sg)
-                    defender.msg("|c%s|n tecum pugnam comisit!" % self.caller)
+                    here.msg_contents("|c%s|n pugnam cum |C%s|n commisit!" % (self.caller,defender.db.abl_sg[0]), exclude=(self.caller,defender))
+                    self.caller.msg("|cTu|n cum |C%s|n pugnam comisisti!" % defender.db.abl_sg[0])
+                    defender.msg("|C%s|n |cte|ncum pugnam comisit!" % self.caller)
                     here.db.combat_turnhandler.join_fight(self.caller)  # Join the fight!
                     return
-                here.msg_contents("|c%s|n pugnam cum |c%s|n commisit!" % (self.caller,defender.db.abl_sg), exclude=(self.caller,defender))
-                self.caller.msg("Tu cum |c%s|n pugnam comisisti!" % defender.db.abl_sg)
-                defender.msg("|c%s|n tecum pugnam comisit!" % self.caller)
+                here.msg_contents("|c%s|n pugnam cum |C%s|n commisit!" % (self.caller,defender.db.abl_sg[0]), exclude=(self.caller,defender))
+                self.caller.msg("|cTu|n cum |C%s|n pugnam comisisti!" % defender.db.abl_sg[0])
+                defender.msg("|C%s|n |cte|n cum pugnam comisit!" % self.caller)
                 # Add a turn handler script to the room, which starts combat.
                 # change to this script
                 here.scripts.add("world.tb_basic.TBBasicTurnHandler")
@@ -895,9 +903,9 @@ class CmdAttack(Command):
 
         # Adding to deal with attacking someone not in combat
         if not is_in_combat(defender):
-            here.msg_contents("|c%s|n pugnam cum |c%s|n commisit!" % (self.caller,defender.db.abl_sg), exclude=(self.caller,defender))
-            self.caller.msg("Tu cum |c%s|n pugnam comisisti!" % defender.db.abl_sg)
-            defender.msg("|c%s|n tecum pugnam comisit!" % self.caller)
+            here.msg_contents("|c%s|n pugnam cum |C%s|n commisit!" % (self.caller,defender.db.abl_sg[0]), exclude=(self.caller,defender))
+            self.caller.msg("|cTu|n cum |C%s|n pugnam comisisti!" % defender.db.abl_sg[0])
+            defender.msg("|C%s|n |cte|ncum pugnam comisit!" % self.caller)
             here.db.combat_turnhandler.join_fight(defender)  # Join the fight!
             return
 
@@ -911,7 +919,7 @@ class CmdAttack(Command):
         spend_action(self.caller, 1, action_name="attack")  # Use up one action.
 
 
-class CmdPass(Command):
+class CmdPass(MuxCommand):
     """
     Passes on your turn.
 
@@ -937,12 +945,12 @@ class CmdPass(Command):
 #            self.caller.msg("You can only do that on your turn.")
             return
 
-        self.caller.location.msg_contents("|c%s|n nihil egit." % self.caller, exclude=self.caller)
-        self.caller.msg('Tu nihil egisti.')
+        self.caller.location.msg_contents("|C%s|n nihil egit." % self.caller, exclude=self.caller)
+        self.caller.msg('|cTu|n nihil egisti.')
         spend_action(self.caller, "all", action_name="pass")  # Spend all remaining actions.
 
 
-class CmdDisengage(Command):
+class CmdDisengage(MuxCommand):
     """
     Passes your turn and attempts to end combat.
 
@@ -969,8 +977,8 @@ class CmdDisengage(Command):
 #            self.caller.msg("You can only do that on your turn.")
             return
 
-        self.caller.location.msg_contents("|c%s|n |ycessit: pugnare non vult|n." % self.caller, exclude=self.caller)
-        self.caller.msg("|yCessisti|n.")
+        self.caller.location.msg_contents("|C%s|n |wcessit: pugnare non vult|n." % self.caller, exclude=self.caller)
+        self.caller.msg("|gCessisti|n.")
         spend_action(self.caller, "all", action_name="disengage")  # Spend all remaining actions.
         """
         The action_name kwarg sets the character's last action to "disengage", which is checked by
@@ -978,7 +986,7 @@ class CmdDisengage(Command):
         """
 
 
-class CmdRest(Command):
+class CmdRest(MuxCommand):
     """
     Recovers damage.
 
@@ -1037,7 +1045,7 @@ class CmdCombatHelp(CmdHelp):
             super().func()  # Call the default help command
 
 
-class CmdFlee(Command):
+class CmdFlee(MuxCommand):
     """
     You do not attack, but attempt to escape.
 
@@ -1062,7 +1070,7 @@ class CmdFlee(Command):
 #            self.caller.msg("You can only do that on your turn.")
             return
 
-        self.caller.location.msg_contents("|c%s|n fugere conatur!" % self.caller,exclude=self.caller)
+        self.caller.location.msg_contents("|C%s|n fugere conatur!" % self.caller,exclude=self.caller)
         self.caller.msg("|cFugere conaris|n!")
         spend_action(self.caller, "all", action_name="flee")  # Spend all remaining actions.
         """

@@ -132,8 +132,9 @@ class CmdLook(COMMAND_DEFAULT_CLASS):
             target, self.args = which_one(self.args,caller,stuff)
             if not target:
                 return
-        if self.args.strip().lower() != target.db.acc_sg.lower() and self.args:
-            self.msg(f"(Did you mean '{target.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in target.db.acc_sg]
+        if self.args.strip().lower() not in lower_case and self.args:
+            self.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
             return
         self.msg((caller.at_look(target), {"type": "look"}), options=None)
 
@@ -196,8 +197,9 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
         obj, self.args = which_one(self.args,caller,stuff)
         if not obj:
             return
-        if obj.db.acc_sg.lower() != self.args.strip().lower():
-            self.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in obj.db.acc_sg]
+        if self.args.strip().lower() not in lower_case:
+            self.msg(f"(Did you mean '{obj.db.acc_sg[0]}'?)")
             return
         if caller == obj:
             caller.msg("Tu te capere non potes.")
@@ -206,7 +208,7 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
             if obj.db.get_err_msg:
                 caller.msg(obj.db.get_err_msg)
             else:
-                caller.msg(f"Tu {obj.db.acc_sg} capere non potes.")
+                caller.msg(f"Tu {obj.db.acc_sg[0]} capere non potes.")
             return
 
         # Check to see if hands are free
@@ -238,8 +240,8 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
             return
         obj.move_to(caller, quiet=True)
         caller.db.lift_carry['current'] += obj.db.physical['mass']
-        caller.msg("%s cepisti." % obj.db.acc_sg)
-        caller.location.msg_contents("%s %s cepit." % (caller.name, obj.db.acc_sg), exclude=caller)
+        caller.msg("%s cepisti." % obj.db.acc_sg[0])
+        caller.location.msg_contents("%s %s cepit." % (caller.name, obj.db.acc_sg[0]), exclude=caller)
         # calling at_get hook method
         obj.at_get(caller)
 
@@ -288,8 +290,9 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
         obj, self.args = which_one(self.args,caller,stuff)
         if not obj:
             return
-        if obj.db.acc_sg.lower() != self.args.strip().lower():
-            self.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in obj.db.acc_sg]
+        if self.args.strip().lower() not in lower_case:
+            self.msg(f"(Did you mean '{obj.db.acc_sg[0]}'?)")
             return
 
         # Call the object script's at_before_drop() method.
@@ -304,7 +307,7 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
 
         obj.move_to(caller.location, quiet=True)
         caller.db.lift_carry['current'] -= obj.db.physical['mass']
-        caller.msg("%s reliquisti." % (obj.db.acc_sg,)) # You have given X up
+        caller.msg("%s reliquisti." % (obj.db.acc_sg[0],)) # You have given X up
         caller.location.msg_contents("%s %s reliquit." % (caller.name, obj.name), exclude=caller)
         # Call the object script's at_drop() method.
         obj.at_drop(caller)
@@ -362,31 +365,31 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         accusatives = []
         for possession in possessions:
             if possession:
-                accusatives.append(possession.db.acc_sg.lower())
+                accusatives.append(possession.db.acc_sg[0].lower())
         # make a list of the dative forms of the things outside of the inventory
         datives = []
         for extern in external:
             if extern and extern.db.dat_sg:
-                datives.append(extern.db.dat_sg.lower())
+                datives.append(extern.db.dat_sg[0].lower())
 
         # check grammar
 
         if thing1 in possessions and thing2 in external:
             if arg1 not in accusatives:
-                caller.msg(f"(Did you mean '{thing1.db.acc_sg}'?)")
+                caller.msg(f"(Did you mean '{thing1.db.acc_sg[0]}'?)")
                 return
             elif arg2 not in datives:
-                caller.msg(f"(Did you mean '{thing2.db.dat_sg}'?)")
+                caller.msg(f"(Did you mean '{thing2.db.dat_sg[0]}'?)")
                 return
             else:
                 direct_object = thing1
                 indirect_object = thing2
         elif thing1 in external and thing2 in possessions:
             if arg1 not in datives:
-                caller.msg(f"(Did you mean '{thing1.db.dat_sg}'?)")
+                caller.msg(f"(Did you mean '{thing1.db.dat_sg[0]}'?)")
                 return
             if arg2 not in accusatives:
-                caller.msg(f"(Did you mean '{thing2.db.acc_sg}'?)")
+                caller.msg(f"(Did you mean '{thing2.db.acc_sg[0]}'?)")
                 return
             else:
                 direct_object = thing2
@@ -401,10 +404,10 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         if not (to_give and target):
             return
         if target == caller:
-            caller.msg("Tu %s tibi dedisti." % to_give.db.acc_sg)
+            caller.msg("Tu %s tibi dedisti." % to_give.db.acc_sg[0])
             return
         if not to_give.location == caller:
-            caller.msg("%s in manibus non habes." % to_give.db.acc_sg)
+            caller.msg("%s in manibus non habes." % to_give.db.acc_sg[0])
             return
 
         # calling at_before_give hook method
@@ -427,7 +430,7 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
                     held_items.append(possession)
 
         if full_hands >= 2:
-            caller.msg(f"Manus {target.db.gen_sg} sunt plenae!")
+            caller.msg(f"Manus {target.db.gen_sg[0]} sunt plenae!")
             return
 
         # Weight calculations
@@ -435,17 +438,18 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
         target_current = target.db.lift_carry['current']
         obj_mass = to_give.db.physical['mass']
         if obj_mass + target_current > target_capacity:
-            caller.msg(f"{target.db.nom_sg} plus ponderis ferre non potest!")
-            target.msg(f"{caller.db.nom_sg} tibi {obj.db.acc_sg} dare voluit, sed tu plus ponderis ferre non potes!")
+            caller.msg(f"{target.db.nom_sg[0]} plus ponderis ferre non potest!")
+            target.msg(f"{caller.db.nom_sg[0]} tibi {obj.db.acc_sg[0]} dare voluit, sed tu plus ponderis ferre non potes!")
             return
 
         # give object
         # 12/7/19 added to deal with clothing, removes worn clothes
         if to_give.db.worn:
             to_give.remove(caller)
-        caller.msg("%s %s dedisti." % (to_give.db.acc_sg, target.db.dat_sg))
+        caller.msg("%s %s dedisti." % (to_give.db.acc_sg[0], target.db.dat_sg[0]))
         to_give.move_to(target, quiet=True)
-        target.msg("%s %s tibi dedit." % (caller.key, to_give.db.acc_sg))
+        target.msg("%s %s tibi dedit." % (caller.key, to_give.db.acc_sg[0]))
+        caller.location.msg_contents(f"{caller.db.nom_sg[0]} {to_give.db.acc_sg[0]} {target.db.dat_sg[0]} dedit.",exclude=(caller,target))
         target.db.lift_carry['current'] += obj_mass
         caller.db.lift_carry['current'] -= obj_mass
         # Call the object script's at_give() method.
@@ -697,11 +701,12 @@ class CmdPut(COMMAND_DEFAULT_CLASS):
         if not intended_container:
             return
         if not intended_container.db.can_hold:
-            caller.msg(f"{intended_container.db.nom_sg} nihil tenere potest")
+            caller.msg(f"{intended_container.db.nom_sg[0]} nihil tenere potest")
             return
 
-        if destination.lower() != intended_container.db.acc_sg.lower():
-            caller.msg(f"(Did you mean 'in {intended_container.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in intended_container.db.acc_sg]
+        if destination.lower() not in lower_case:
+            caller.msg(f"(Did you mean 'in {intended_container.db.acc_sg[0]}'?)")
             return
 
         stuff = caller.contents
@@ -709,15 +714,16 @@ class CmdPut(COMMAND_DEFAULT_CLASS):
 #        self.msg(f"intended_to_store: {intended_to_store}")
         if not intended_to_store:
             return
-        if to_store != intended_to_store.db.acc_sg:
-            caller.msg(f"(Did you mean '{intended_to_store.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in intended_to_store.db.acc_sg]
+        if to_store not in lower_case:
+            caller.msg(f"(Did you mean '{intended_to_store.db.acc_sg[0]}'?)")
             return
 
         if intended_to_store.db.worn:
-            caller.msg(f"Prius necesse est {intended_to_store.db.acc_sg} exuere!")
+            caller.msg(f"Prius necesse est {intended_to_store.db.acc_sg[0]} exuere!")
             return
         if intended_to_store.dbref == intended_container.dbref:
-            caller.msg(f"{intended_to_store.db.nom_sg} in se poni non potest!")
+            caller.msg(f"{intended_to_store.db.nom_sg[0]} in se poni non potest!")
             return
 
 # Manage volume and dimensions of container
@@ -726,7 +732,7 @@ class CmdPut(COMMAND_DEFAULT_CLASS):
         container_max_volume = intended_container.db.container['max_vol']
         container_current_vol = intended_container.db.container['rem_vol']
         if obj_volume > container_current_vol:
-            caller.msg(f"In {intended_container.db.abl_sg} non est spatium!")
+            caller.msg(f"In {intended_container.db.abl_sg[0]} non est spatium!")
             return
         if intended_to_store.db.physical['rigid']:
             obj_dimensions = [
@@ -742,16 +748,16 @@ class CmdPut(COMMAND_DEFAULT_CLASS):
             obj_dimensions.sort()
             container_dimensions.sort()
             if (obj_dimensions[2] / 2) > container_dimensions[2]:
-                caller.msg(f"Forma {intended_to_store.db.gen_sg} in {intended_to_store.db.acc_sg} poni non potest.")
+                caller.msg(f"Forma {intended_to_store.db.gen_sg[0]} in {intended_to_store.db.acc_sg[0]} poni non potest.")
                 return
             elif obj_dimensions[1] > container_dimensions[1] or obj_dimensions[0] > container_dimensions[0]:
-                caller.msg(f"Forma {intended_to_store.db.gen_sg} in {intended_to_store.db.acc_sg} poni non potest.")
+                caller.msg(f"Forma {intended_to_store.db.gen_sg[0]} in {intended_to_store.db.acc_sg[0]} poni non potest.")
                 return
 
-        caller.msg("%s in %s posuisti." % (intended_to_store.db.acc_sg, intended_container.db.acc_sg))
+        caller.msg("%s in %s posuisti." % (intended_to_store.db.acc_sg[0], intended_container.db.acc_sg[0]))
         intended_container.db.container['rem_vol'] -= obj_volume
         intended_to_store.move_to(intended_container, quiet=True)
-        caller.location.msg_contents("%s %s in %s posuit." % (caller.db.nom_sg, intended_to_store.db.acc_sg, intended_container.db.acc_sg),exclude=caller)
+        caller.location.msg_contents("%s %s in %s posuit." % (caller.db.nom_sg[0], intended_to_store.db.acc_sg[0], intended_container.db.acc_sg[0]),exclude=caller)
 
         intended_to_store.db.held = False
 
@@ -808,11 +814,12 @@ class CmdGetOut(COMMAND_DEFAULT_CLASS):
         if not intended_source:
             return
         if not intended_source.db.can_hold:
-            caller.msg(f"{indended_container.db.nom_sg} nihil tenere potest")
+            caller.msg(f"{indended_container.db.nom_sg[0]} nihil tenere potest")
             return
 
-        if source_arg.lower() != intended_source.db.abl_sg.lower():
-            caller.msg(f"(Did you mean 'ex {inteded_source.db.abl_sg}'?)")
+        lower_case = [x.lower() for x in intended_source.db.abl_sg]
+        if source_arg.lower() not in lower_case:
+            caller.msg(f"(Did you mean 'ex {inteded_source.db.abl_sg[0]}'?)")
             return
 
         stuff = intended_source.contents
@@ -820,8 +827,9 @@ class CmdGetOut(COMMAND_DEFAULT_CLASS):
 #        self.msg(f"intended_get: {intended_get}")
         if not intended_get:
             return
-        if get_arg != intended_get.db.acc_sg:
-            caller.msg(f"(Did you mean '{intended_get.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in intended_get.db.acc_sg]
+        if get_arg.lower() not in lower_case:
+            caller.msg(f"(Did you mean '{intended_get.db.acc_sg[0]}'?)")
             return
 
         # Check if target's hands are full
@@ -847,9 +855,9 @@ class CmdGetOut(COMMAND_DEFAULT_CLASS):
 
         intended_source.db.container['rem_vol'] += intended_get.db.physical['volume']
 
-        caller.msg("%s ex %s excepisti." % (intended_get.db.acc_sg, intended_source.db.abl_sg))
+        caller.msg("%s ex %s excepisti." % (intended_get.db.acc_sg[0], intended_source.db.abl_sg[0]))
         intended_get.move_to(caller, quiet=True)
-        caller.location.msg_contents("%s %s ex %s excepit." % (caller.db.nom_sg, intended_get.db.acc_sg, intended_source.db.abl_sg),exclude=caller)
+        caller.location.msg_contents("%s %s ex %s excepit." % (caller.db.nom_sg[0], intended_get.db.acc_sg[0], intended_source.db.abl_sg[0]),exclude=caller)
 
         # Put in hand
 
@@ -897,9 +905,10 @@ class CmdLookIn(COMMAND_DEFAULT_CLASS):
             if not target:
                 return
         if not target.db.can_hold:
-            caller.msg(f"{target.db.nom_sg} nihil tenere potest!")
-        if self.args.strip().lower() != target.db.acc_sg.lower() and self.args:
-            self.msg(f"(Did you mean '{target.db.acc_sg}'?)")
+            caller.msg(f"{target.db.nom_sg[0]} nihil tenere potest!")
+        lower_case = [x.lower() for x in target.db.acc_sg]
+        if self.args.strip().lower() not in lower_case and self.args:
+            self.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
             return
 
         items = target.contents
@@ -980,8 +989,9 @@ class CmdHold(COMMAND_DEFAULT_CLASS):
         obj, self.args = which_one(self.args,caller,stuff)
         if not obj:
             return
-        if obj.db.acc_sg.lower() != self.args.strip().lower():
-            self.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
+        lower_case = [x.lower() for x in obj.db.acc_sg]
+        if self.args.strip().lower() not in lower_case:
+            self.msg(f"(Did you mean '{obj.db.acc_sg[0]}'?)")
             return
         if caller == obj:
             caller.msg("Tu te tenere non potes.")
@@ -990,7 +1000,7 @@ class CmdHold(COMMAND_DEFAULT_CLASS):
             if obj.db.get_err_msg:
                 caller.msg(obj.db.get_err_msg)
             else:
-                caller.msg(f"Tu {obj.db.acc_sg} tenere non potes.")
+                caller.msg(f"Tu {obj.db.acc_sg[0]} tenere non potes.")
             return
 
         # See if specificed hand is free
@@ -1013,8 +1023,8 @@ class CmdHold(COMMAND_DEFAULT_CLASS):
                 return
             obj.move_to(caller, quiet=True)
             
-        caller.msg("%s tenes." % obj.db.acc_sg)
-        caller.location.msg_contents("%s %s tenet." % (caller.name, obj.db.acc_sg), exclude=caller)
+        caller.msg("%s tenes." % obj.db.acc_sg[0])
+        caller.location.msg_contents("%s %s tenet." % (caller.name, obj.db.acc_sg[0]), exclude=caller)
         # calling at_get hook method
         obj.at_get(caller)
 

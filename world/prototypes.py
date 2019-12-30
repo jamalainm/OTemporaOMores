@@ -38,8 +38,8 @@ See the `@spawn` command and `evennia.utils.spawner` for more info.
 BAG = {
         "key":"saccus",
         "typeclass":"typeclasses.latin_clothing.Clothing",
-        "nom_sg":"saccus",
-        "gen_sg":"sacci",
+        "nom_sg":["saccus"],
+        "gen_sg":["sacci"],
         "gender":"2",
         "desc":"A bag",
         "clothing_type":"back",
@@ -50,8 +50,8 @@ BAG = {
 BANDEAU = {
         "key":"strophium",
         "typeclass":"typeclasses.latin_clothing.Clothing",
-        "nom_sg":"strophium",
-        "gen_sg":"strophii",
+        "nom_sg":["strophium"],
+        "gen_sg":["strophii"],
         "gender":"3",
         "desc":"A bandeau",
         "clothing_type":"undershirt",
@@ -61,8 +61,8 @@ BANDEAU = {
 UNDERWEAR = {
         "key":"subligaculum",
         "typeclass":"typeclasses.latin_clothing.Clothing",
-        "nom_sg":"subligaculum",
-        "gen_sg":"subligaculi",
+        "nom_sg":["subligaculum"],
+        "gen_sg":["subligaculi"],
         "gender":"3",
         "desc":"Briefs",
         "clothing_type":"underpants",
@@ -72,8 +72,8 @@ UNDERWEAR = {
 SWORD = {
         "key":"gladius",
         "typeclass":"typeclasses.objects.Object",
-        "nom_sg":"gladius",
-        "gen_sg":"gladii",
+        "nom_sg":["gladius"],
+        "gen_sg":["gladii"],
         "gender":"2",
         "desc":"A shortsword",
         "physical":{"material":"iron","rigid":True,"x":0.04,"y":0.65,"z":0.003,"mass":0.6,"volume":0.08},
@@ -83,9 +83,8 @@ SWORD = {
 WOOL = {
         "key":"lana",
         "typeclass":"typeclasses.objects.Object",
-        "location":"#73",
-        "nom_sg":"lana",
-        "gen_sg":"lanae",
+        "nom_sg":["lana"],
+        "gen_sg":["lanae"],
         "gender":"1",
         "desc":"A small bale of wool",
         'physical':{"material":"wool","rigid":False,"volume":23,"mass":3},
@@ -93,10 +92,9 @@ WOOL = {
 CLOAK = {
         "key":"pallium",
         "typeclass":"typeclasses.latin_clothing.Clothing",
-        "location":"#90",
         "clothing_type":"cloak",
-        "nom_sg":"pallium",
-        "gen_sg":"pallii",
+        "nom_sg":["pallium"],
+        "gen_sg":["pallii"],
         "gender":"3",
         "desc":"A simple, well-woven cloth, to wrap about your top",
         "physical":{"material":"wool","rigid":False,"x":3.04,"y":1.52,"z":0.005,"mass":3,"volume":23}
@@ -104,10 +102,9 @@ CLOAK = {
 HAT = {
         "key":"petasus",
         "typeclass": "typeclasses.latin_clothing.Clothing",
-        "location":"#73",
         "clothing_type":"hat",
-        "nom_sg":"petasus",
-        "gen_sg":"petasi",
+        "nom_sg":["petasus"],
+        "gen_sg":["petasi"],
         "gender":"2",
         "desc":"A broad-brimmed, traveler's hat",
         "physical":{"material":"wool","rigid":False,"mass":0.17,"volume":2.21}
@@ -116,10 +113,9 @@ HAT = {
 SANDALS = {
         "key":"soleae",
         "typeclass":"typeclasses.latin_clothing.Clothing",
-        "location":"#73",
         "clothing_type":"shoes",
-        "nom_sg":"soleae",
-        "gen_sg":"solearum",
+        "nom_sg":["soleae"],
+        "gen_sg":["solearum"],
         "gender":"1",
         "desc":"A pair of simple sandals",
         "physical":{"material":"leather","rigid":True,"x":0.107,"y":0.253,"z":0.0026,"mass":0.48,"volume":0.07}
@@ -128,10 +124,9 @@ SANDALS = {
 TUNIC = {
         "key":"tunica",
         "typeclass":"typeclasses.latin_clothing.Clothing",
-        "location":"#73",
         "clothing_type":"fullbody",
-        "nom_sg":"tunica",
-        "gen_sg":"tunicae",
+        "nom_sg":["tunica"],
+        "gen_sg":["tunicae"],
         "gender":"1",
         "desc":"A sleeveless, knee-length tunic",
         "physical":{"material":"linen","rigid":False,"mass":1,"volume":2}
