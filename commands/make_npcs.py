@@ -15,7 +15,7 @@ permissions = settings.PERMISSION_ACCOUNT_DEFAULT
 new_character = create.create_object(
         typeclass, 
         key=self.name, 
-        location=start_location, 
+        location='#249', 
         home=default_home, 
         permissions=permissions,
         attributes=[

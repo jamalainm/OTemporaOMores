@@ -542,3 +542,10 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
         return string
         # Thinking that the above, added for clothing, might need to only be in the
         # character typeclass
+    def at_after_move(self,source_location):
+        target = self.location
+        self.msg((self.at_look(target), {"type": "look"}), options=None)
+
+        prompt = "\n|wVita: %i/%i) |n" % (self.db.hp['current'],self.db.hp['max'])
+
+        self.msg(prompt=prompt)

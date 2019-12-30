@@ -36,6 +36,8 @@ import os
 SERVERNAME = "O Tempora, O Mores"
 GAME_SLOGAN = "Adventures in Latin"
 #COMMAND_PARSER = "commands.cmdparser"
+# Adding the following line so that a command prompt appears after every command
+COMMAND_DEFAULT_CLASS = "commands.command.MuxCommand"
 TELNET_ENABLED = True
 TELNET_PORTS = [4000]
 TELNET_INTERFACES = ["0.0.0.0"]

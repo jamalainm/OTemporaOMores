@@ -8,6 +8,7 @@ from evennia.typeclasses.attributes import NickTemplateInvalid
 # adding the following for adaptions to commands based on the
 # addition of the clothing module from contrib
 from typeclasses.latin_noun import LatinNoun
+from commands.command import MuxCommand
 
 COMMAND_DEFAULT_CLASS = utils.class_from_module(settings.COMMAND_DEFAULT_CLASS)
 # Added for dealing with multiple objects

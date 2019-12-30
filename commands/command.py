@@ -10,30 +10,40 @@ from evennia import Command as BaseCommand
 # from evennia import default_cmds
 
 
-class Command(BaseCommand):
-    """
-    Inherit from this if you want to create your own command styles
-    from scratch.  Note that Evennia's default commands inherits from
-    MuxCommand instead.
-
-    Note that the class's `__doc__` string (this text) is
-    used by Evennia to create the automatic help entry for
-    the command, so make sure to document consistently here.
-
-    Each Command implements the following methods, called
-    in this order (only func() is actually required):
-        - at_pre_cmd(): If this returns anything truthy, execution is aborted.
-        - parse(): Should perform any extra parsing needed on self.args
-            and store the result on self.
-        - func(): Performs the actual work.
-        - at_post_cmd(): Extra actions, often things done after
-            every command, like prompts.
-
-    """
-
-    pass
-
-
+#class Command(BaseCommand):
+#    """
+#    Inherit from this if you want to create your own command styles
+#    from scratch.  Note that Evennia's default commands inherits from
+#    MuxCommand instead.
+#
+#    Note that the class's `__doc__` string (this text) is
+#    used by Evennia to create the automatic help entry for
+#    the command, so make sure to document consistently here.
+#
+#    Each Command implements the following methods, called
+#    in this order (only func() is actually required):
+#        - at_pre_cmd(): If this returns anything truthy, execution is aborted.
+#        - parse(): Should perform any extra parsing needed on self.args
+#            and store the result on self.
+#        - func(): Performs the actual work.
+#        - at_post_cmd(): Extra actions, often things done after
+#            every command, like prompts.
+#
+#    """
+#    def at_post_cmd(self):
+#         """
+#         This hook is called after the command has finished executing
+#         (after self.func()).
+#         """
+#        "called after self.func()."
+#        caller = self.caller
+#        prompt = "Vita: %i/%i) " % (caller.db.hp['current'],caller.db.hp['max'])
+#
+#        caller.msg(prompt=prompt)
+#
+#    pass
+#
+#
 # -------------------------------------------------------------
 #
 # The default commands inherit from
@@ -51,21 +61,26 @@ class Command(BaseCommand):
 #
 # -------------------------------------------------------------
 
-# from evennia.utils import utils
+from evennia.utils import utils
+# Added the line below to conform with tutorial docs on prompt
+from evennia.commands.default import muxcommand
 #
 #
-# class MuxCommand(Command):
-#     """
-#     This sets up the basis for a MUX command. The idea
-#     is that most other Mux-related commands should just
-#     inherit from this and don't have to implement much
-#     parsing of their own unless they do something particularly
-#     advanced.
-#
-#     Note that the class's __doc__ string (this text) is
-#     used by Evennia to create the automatic help entry for
-#     the command, so make sure to document consistently here.
-#     """
+# The line below was the original, but the tutorial on the prompt
+# suggests making the change seen below.
+#class MuxCommand(BaseCommand):
+class MuxCommand(muxcommand.MuxCommand):
+    """
+    This sets up the basis for a MUX command. The idea
+    is that most other Mux-related commands should just
+    inherit from this and don't have to implement much
+    parsing of their own unless they do something particularly
+    advanced.
+
+    Note that the class's __doc__ string (this text) is
+    used by Evennia to create the automatic help entry for
+    the command, so make sure to document consistently here.
+    """
 #     def has_perm(self, srcobj):
 #         """
 #         This is called by the cmdhandler to determine
@@ -81,11 +96,16 @@ class Command(BaseCommand):
 #         """
 #         pass
 #
-#     def at_post_cmd(self):
-#         """
-#         This hook is called after the command has finished executing
-#         (after self.func()).
-#         """
+    def at_post_cmd(self):
+        """
+        This hook is called after the command has finished executing
+        (after self.func()).
+        """
+#        "called after self.func()."
+        caller = self.caller
+        prompt = "\n|wVita: %i/%i) |n" % (caller.db.hp['current'],caller.db.hp['max'])
+
+        caller.msg(prompt=prompt)
 #         pass
 #
 #     def parse(self):
@@ -186,7 +206,7 @@ class Command(BaseCommand):
 #                 self.character = self.caller.get_puppet(self.session)
 #             else:
 #                 self.character = None
-class CmdNPC(Command):
+class CmdNPC(MuxCommand):
     """
     controls an NPC
 
