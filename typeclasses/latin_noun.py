@@ -149,7 +149,7 @@ class LatinNoun(DefaultObject):
             plural = self.key
         plural = "%s %s" % (count, plural)
         if self.db.nom_sg:
-            singular = self.db.nom_sg[0]
+            singular = self.key
         else:
             singular = self.key
         if not self.aliases.get(plural, category="plural_key"):

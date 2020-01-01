@@ -57,7 +57,9 @@ def which_one(args,caller,stuff):
         same = []
         args = args.strip().lower()
         for item in stuff:
-            characteristics = item.aliases.all()
+            characteristics = [item.key] + item.aliases.all()
+#            characteristics = item.aliases.all()
+#            characteristics.append(item.key)
             [x.lower() for x in characteristics]
             if args in characteristics:
                 same.append(item)

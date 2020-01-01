@@ -80,7 +80,9 @@ from typeclasses.objects import Object
 from evennia import DefaultObject
 from evennia import DefaultCharacter
 from evennia import default_cmds
-from evennia.commands.default.muxcommand import MuxCommand
+# Commented out import from evennia MuxCommand to prefer mine
+from commands.command import MuxCommand
+#from evennia.commands.default.muxcommand import MuxCommand
 # swapping out the following for my own
 # from evennia.utils import list_to_string
 from typeclasses.latin_noun import LatinNoun
@@ -105,6 +107,7 @@ CLOTHING_TYPE_ORDER = [
     "undershirt",
     "gloves",
     "fullbody",
+    "shoulder",
     "bottom",
     "underpants",
     "socks",
@@ -112,7 +115,7 @@ CLOTHING_TYPE_ORDER = [
     "accessory",
 ]
 # The maximum number of each type of clothes that can be worn. Unlimited if untyped or not specified.
-CLOTHING_TYPE_LIMIT = {"hat": 1, "gloves": 1, "socks": 1, "shoes": 1, "cloak": 1, "undershirt": 1, "bottom": 1, "underpants": 1}
+CLOTHING_TYPE_LIMIT = {"hat": 1, "gloves": 1, "socks": 1, "shoes": 1, "cloak": 1, "undershirt": 1, "bottom": 1, "underpants": 1, "fullbody":2, "shoulder":2}
 # The maximum number of clothing items that can be worn, or None for unlimited.
 CLOTHING_OVERALL_LIMIT = 20
 # What types of clothes will automatically cover what other types of clothes when worn.

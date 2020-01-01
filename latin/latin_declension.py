@@ -18,9 +18,9 @@ class DeclineNoun:
         elif self.gen[-2:] == "um":
             if self.nom[-2:] == "ae":
                 return [6, self.nom[:-2]]
-            elif self.nom == "i":
+            elif self.nom[-1] == "i":
                 return [7, self.nom[:-1]]
-            elif self.nom == "a":
+            elif self.nom[-1] == "a":
                 return [8, self.nom[:-1]]
         else:
             return [2, self.gen[:-1]]
@@ -170,14 +170,14 @@ class DeclineNoun:
 
     def second_plural_masc(self):
 
-        base = DenclineNoun.id_declension(self)[1]
+        base = DeclineNoun.id_declension(self)[1]
 
         endings = ['i','orum','is','os','is','i','i','orum','is','os','is','i']
 
         forms = []
 
         for i in endings:
-            forms.append(base + 1)
+            forms.append(base + i)
 
         return forms
 

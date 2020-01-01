@@ -132,6 +132,15 @@ TUNIC = {
         "physical":{"material":"linen","rigid":False,"mass":1,"volume":2}
         }
 
+LAMP = {
+        "key":"lumen",
+        "typeclass":"typeclasses.myobjects.Flammable",
+        "nom_sg":["lumen"],
+        "gen_sg":["luminis"],
+        "gender":"3",
+        "desc":"a small, simple, terracotta oil lamp",
+        "physical":{"material":"clay","rigid":True,"mass":0.15,"volume":0.07}
+        }
 # from random import randint
 #
 # GOBLIN = {

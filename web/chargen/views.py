@@ -104,7 +104,7 @@ def creating(request):
                 perms = str(user.permissions)
                 # create the character
                 char = create.create_object(typeclass=typeclass, key=name,
-                        home=home, permissions=perms,attributes=[('gender', gender),('gens', gens),('praenomen',praenomen),('nomen',nomen),('nom_sg', [praenomen]),('gen_sg', [genitive]),('stats', {'str':int(stat_nums[0]), 'dex':int(stat_nums[1]),'con':int(stat_nums[2]),'int':int(stat_nums[3]),'wis':int(stat_nums[4]),'cha':int(stat_nums[5])})])
+                        home=home, permissions=perms,attributes=[('gender', gender),('gens', gens),('praenomen',praenomen),('nomen',nomen),('age',18),('nom_sg', [praenomen]),('gen_sg', [genitive]),('stats', {'str':int(stat_nums[0]), 'dex':int(stat_nums[1]),'con':int(stat_nums[2]),'int':int(stat_nums[3]),'wis':int(stat_nums[4]),'cha':int(stat_nums[5])})])
                 user.db._playable_characters.append(char)
                 # add the right locks for the character so the account can
                 #  puppet it

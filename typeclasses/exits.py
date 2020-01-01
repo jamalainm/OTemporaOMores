@@ -37,5 +37,7 @@ class Exit(EventExit):
                                         not be called if the attribute `err_traverse` is
                                         defined, in which case that will simply be echoed.
     """
+    def at_object_creation(self):
+        self.db.acc_sg = [self.key]
+        self.db.desc = self.destination
 
-    pass

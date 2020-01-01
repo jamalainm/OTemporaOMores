@@ -26,6 +26,8 @@ from evennia.utils.create import create_object
 # adding for combat
 from world.tb_basic import TBBasicCharacter
 from world.tb_basic import is_in_combat
+import copy
+
 class Character(EventCharacter,LatinNoun,TBBasicCharacter):
     """
     The Character defaults to reimplementing some of base Object's hook methods with the
@@ -49,26 +51,83 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
 
     def at_object_creation(self):
 
+        # Accommodoate and prefer the "Nomen"
+        if self.db.nomen:
+            gender = self.db.gender
+            if int(self.db.gender) == 2:
+                genitive = self.db.nomen[:-2] + 'i'
+            else:
+                genitive = self.db.nomen + 'e'
+                
+            nomen = DeclineNoun(self.db.nomen,genitive,gender)
+            nomen_forms = nomen.make_paradigm()
+            self.db.nom_sg = [nomen_forms[0][1]]
+            self.db.gen_sg = [nomen_forms[1][1]]
+            self.db.dat_sg = [nomen_forms[2][1]]
+            self.db.acc_sg = [nomen_forms[3][1]]
+            self.db.abl_sg = [nomen_forms[4][1]]
+            self.db.voc_sg = [nomen_forms[5][1]]
+            self.db.nom_pl = [nomen_forms[6][1]]
+            self.db.gen_pl = [nomen_forms[7][1]]
+            self.db.dat_pl = [nomen_forms[8][1]]
+            self.db.acc_pl = [nomen_forms[9][1]]
+            self.db.abl_pl = [nomen_forms[10][1]]
+            self.db.voc_pl = [nomen_forms[11][1]]
+
+            # Add the variant forms to aliases for easy interaction
+            for form in nomen_forms:
+                self.aliases.add(form[1])
+
+            praenomen = self.db.praenomen
+            if praenomen[-1] == 'a':
+                p_genitive = praenomen + 'e'
+            elif praenomen[-1] == 'r':
+                p_genitive = praenomen + 'is'
+            elif praenomen[-2:] == 'us':
+                p_genitive = praenomen[:-2] + 'i'
+            else:
+                p_genitive = praenomen + 'nis'
+
+            word = DeclineNoun(praenomen,p_genitive,self.db.gender)
+            forms = word.make_paradigm()
+            self.db.nom_sg.append(forms[0][1])
+            self.db.gen_sg.append(forms[1][1])
+            self.db.dat_sg.append(forms[2][1])
+            self.db.acc_sg.append(forms[3][1])
+            self.db.abl_sg.append(forms[4][1])
+            self.db.voc_sg.append(forms[5][1])
+            self.db.nom_pl.append(forms[6][1])
+            self.db.gen_pl.append(forms[7][1])
+            self.db.dat_pl.append(forms[8][1])
+            self.db.acc_pl.append(forms[9][1])
+            self.db.abl_pl.append(forms[10][1])
+            self.db.voc_pl.append(forms[11][1])
+
+            # Add the variant forms to aliases for easy interaction
+            for form in forms:
+                self.aliases.add(form[1])
+
         # add all of the case endings to attributes
 
-        word = DeclineNoun(self.db.nom_sg[0],self.db.gen_sg[0],self.db.gender)
-        forms = word.make_paradigm()
-        all_forms = forms
-        forms = forms[2:]
-        self.db.dat_sg = [forms[0][1]]
-        self.db.acc_sg = [forms[1][1]]
-        self.db.abl_sg = [forms[2][1]]
-        self.db.voc_sg = [forms[3][1]]
-        self.db.nom_pl = [forms[4][1]]
-        self.db.gen_pl = [forms[5][1]]
-        self.db.dat_pl = [forms[6][1]]
-        self.db.acc_pl = [forms[7][1]]
-        self.db.abl_pl = [forms[8][1]]
-        self.db.voc_pl = [forms[9][1]]
+        else:
+            word = DeclineNoun(self.db.nom_sg[0],self.db.gen_sg[0],self.db.gender)
+            forms = word.make_paradigm()
+            all_forms = forms
+            forms = forms[2:]
+            self.db.dat_sg = [forms[0][1]]
+            self.db.acc_sg = [forms[1][1]]
+            self.db.abl_sg = [forms[2][1]]
+            self.db.voc_sg = [forms[3][1]]
+            self.db.nom_pl = [forms[4][1]]
+            self.db.gen_pl = [forms[5][1]]
+            self.db.dat_pl = [forms[6][1]]
+            self.db.acc_pl = [forms[7][1]]
+            self.db.abl_pl = [forms[8][1]]
+            self.db.voc_pl = [forms[9][1]]
 
-        # Add the variant forms to aliases for easy interaction
-        for form in all_forms:
-            self.aliases.add(form[1])
+            # Add the variant forms to aliases for easy interaction
+            for form in all_forms:
+                self.aliases.add(form[1])
 
         self.tags.add('latin')
 
@@ -197,8 +256,8 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
             return self.key
         else:
             if self.locks.check_lockstring(looker, "perm(Builder)"):
-                return "{}(#{})".format(self.db.nom_sg[0], self.id)
-            return self.db.nom_sg[0]
+                return "{}(#{})".format(self.key, self.id)
+            return self.key
 
     def announce_move_from(self, destination, msg=None, mapping=None):
         """
@@ -281,7 +340,7 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
         self.location.msg(source_location)
         if source_location:
             origin = source_location.db.abl_sg[0]
-            string = msg or f"{self.db.nom_sg[0]} ab {source_location.db.abl_sg[0]} venit."
+            string = msg or f"{self.key} ab {source_location.db.abl_sg[0]} venit."
         else:
             string = "{character} venit."
 
@@ -551,6 +610,7 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
         target = self.location
         self.msg((self.at_look(target), {"type": "look"}), options=None)
 
-        prompt = "\n|wVita: %i/%i) |n" % (self.db.hp['current'],self.db.hp['max'])
+        if self.db.hp:
+            prompt = "\n|wVita: %i/%i) |n" % (self.db.hp['current'],self.db.hp['max'])
 
-        self.msg(prompt=prompt)
+            self.msg(prompt=prompt)

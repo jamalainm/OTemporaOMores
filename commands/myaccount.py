@@ -316,6 +316,7 @@ class CmdCharCreate(COMMAND_DEFAULT_CLASS):
                     ('gender',self.gender),
                     ('praenomen',self.praenomen),
                     ('nomen',self.nomen),
+                    ('age',18),
                     ('nom_sg',nom_list),
                     ('gen_sg',gen_list),
                     ('stats', {'str':self.stats[0],'dex':self.stats[1],'con':self.stats[2],'int':self.stats[3],'wis':self.stats[4],'cha':self.stats[5]})
