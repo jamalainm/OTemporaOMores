@@ -185,7 +185,10 @@ class LatinNoun(DefaultObject):
             if con.destination:
                 exits.append(key)
             elif con.has_account:
-                users.append("|c%s|n" % key)
+                if con.db.is_glowing:
+                    users.append("|y(ardens)|n |c%s|n" % key)
+                else:
+                    users.append("|c%s|n" % key)
             else:
                 # things can be pluralized
                 things[key].append(con)
@@ -231,6 +234,8 @@ class LatinNoun(DefaultObject):
                 nitem = len(itemlist)
                 if nitem == 1:
                     key, _ = itemlist[0].get_numbered_name(nitem, looker, key=key)
+                    if itemlist[0].db.is_glowing:
+                        key = "|y(ardens)|n " + key
                 else:
                     key = [item.get_numbered_name(nitem, looker, key=key)[1] for item in itemlist][
                         0

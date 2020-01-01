@@ -33,4 +33,4 @@ class Flammable(Object):
 
         self.tags.add('latin')
 
-        self.cmdset.add(obj_command.FlammableCmdSet())
+        self.cmdset.add(obj_command.FlammableCmdSet(), permanent=True)
