@@ -136,7 +136,7 @@ class CmdLook(COMMAND_DEFAULT_CLASS):
                 return
         lower_case = [x.lower() for x in target.db.acc_sg]
         if self.args.strip().lower() not in lower_case and self.args:
-            self.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
+            self.msg(f"(Did you mean '{target.db.acc_sg}'?)")
             return
         self.msg((caller.at_look(target), {"type": "look"}), options=None)
 
@@ -201,7 +201,7 @@ class CmdGet(COMMAND_DEFAULT_CLASS):
             return
         lower_case = [x.lower() for x in obj.db.acc_sg]
         if self.args.strip().lower() not in lower_case:
-            self.msg(f"(Did you mean '{obj.db.acc_sg[0]}'?)")
+            self.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
             return
         if caller == obj:
             caller.msg("Tu te capere non potes.")
@@ -294,7 +294,7 @@ class CmdDrop(COMMAND_DEFAULT_CLASS):
             return
         lower_case = [x.lower() for x in obj.db.acc_sg]
         if self.args.strip().lower() not in lower_case:
-            self.msg(f"(Did you mean '{obj.db.acc_sg[0]}'?)")
+            self.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
             return
 
         # Call the object script's at_before_drop() method.
@@ -378,20 +378,20 @@ class CmdGive(COMMAND_DEFAULT_CLASS):
 
         if thing1 in possessions and thing2 in external:
             if arg1 not in accusatives:
-                caller.msg(f"(Did you mean '{thing1.db.acc_sg[0]}'?)")
+                caller.msg(f"(Did you mean '{thing1.db.acc_sg}'?)")
                 return
             elif arg2 not in datives:
-                caller.msg(f"(Did you mean '{thing2.db.dat_sg[0]}'?)")
+                caller.msg(f"(Did you mean '{thing2.db.dat_sg}'?)")
                 return
             else:
                 direct_object = thing1
                 indirect_object = thing2
         elif thing1 in external and thing2 in possessions:
             if arg1 not in datives:
-                caller.msg(f"(Did you mean '{thing1.db.dat_sg[0]}'?)")
+                caller.msg(f"(Did you mean '{thing1.db.dat_sg}'?)")
                 return
             if arg2 not in accusatives:
-                caller.msg(f"(Did you mean '{thing2.db.acc_sg[0]}'?)")
+                caller.msg(f"(Did you mean '{thing2.db.acc_sg}'?)")
                 return
             else:
                 direct_object = thing2
@@ -708,7 +708,7 @@ class CmdPut(COMMAND_DEFAULT_CLASS):
 
         lower_case = [x.lower() for x in intended_container.db.acc_sg]
         if destination.lower() not in lower_case:
-            caller.msg(f"(Did you mean 'in {intended_container.db.acc_sg[0]}'?)")
+            caller.msg(f"(Did you mean 'in {intended_container.db.acc_sg}'?)")
             return
 
         stuff = caller.contents
@@ -718,7 +718,7 @@ class CmdPut(COMMAND_DEFAULT_CLASS):
             return
         lower_case = [x.lower() for x in intended_to_store.db.acc_sg]
         if to_store not in lower_case:
-            caller.msg(f"(Did you mean '{intended_to_store.db.acc_sg[0]}'?)")
+            caller.msg(f"(Did you mean '{intended_to_store.db.acc_sg}'?)")
             return
 
         if intended_to_store.db.worn:
@@ -821,7 +821,7 @@ class CmdGetOut(COMMAND_DEFAULT_CLASS):
 
         lower_case = [x.lower() for x in intended_source.db.abl_sg]
         if source_arg.lower() not in lower_case:
-            caller.msg(f"(Did you mean 'ex {inteded_source.db.abl_sg[0]}'?)")
+            caller.msg(f"(Did you mean 'ex {inteded_source.db.abl_sg}'?)")
             return
 
         stuff = intended_source.contents
@@ -831,7 +831,7 @@ class CmdGetOut(COMMAND_DEFAULT_CLASS):
             return
         lower_case = [x.lower() for x in intended_get.db.acc_sg]
         if get_arg.lower() not in lower_case:
-            caller.msg(f"(Did you mean '{intended_get.db.acc_sg[0]}'?)")
+            caller.msg(f"(Did you mean '{intended_get.db.acc_sg}'?)")
             return
 
         # Check if target's hands are full
@@ -910,7 +910,7 @@ class CmdLookIn(COMMAND_DEFAULT_CLASS):
             caller.msg(f"{target.db.nom_sg[0]} nihil tenere potest!")
         lower_case = [x.lower() for x in target.db.acc_sg]
         if self.args.strip().lower() not in lower_case and self.args:
-            self.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
+            self.msg(f"(Did you mean '{target.db.acc_sg}'?)")
             return
 
         items = target.contents
@@ -993,7 +993,7 @@ class CmdHold(COMMAND_DEFAULT_CLASS):
             return
         lower_case = [x.lower() for x in obj.db.acc_sg]
         if self.args.strip().lower() not in lower_case:
-            self.msg(f"(Did you mean '{obj.db.acc_sg[0]}'?)")
+            self.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
             return
         if caller == obj:
             caller.msg("Tu te tenere non potes.")

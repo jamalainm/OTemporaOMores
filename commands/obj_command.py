@@ -30,7 +30,7 @@ class CmdLight(MuxCommand):
                 return
         lower_case = [x.lower() for x in target.db.acc_sg]
         if self.args.strip().lower() not in lower_case and self.args:
-            caller.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
+            caller.msg(f"(Did you mean '{target.db.acc_sg}'?)")
             return
 
         if not target.db.flammable:
@@ -72,7 +72,7 @@ class CmdPutOut(MuxCommand):
                 return
         lower_case = [x.lower() for x in target.db.acc_sg]
         if self.args.strip().lower() not in lower_case and self.args:
-            target.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
+            target.msg(f"(Did you mean '{target.db.acc_sg}'?)")
             return
 
         if not target.db.is_glowing:

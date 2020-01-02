@@ -106,7 +106,7 @@ class MuxCommand(muxcommand.MuxCommand):
         if caller.db.hp:
             prompt = "\n|wVita: %i/%i) |n" % (caller.db.hp['current'],caller.db.hp['max'])
 
-            caller.msg(prompt=prompt)
+            caller.msg(prompt)
 #         pass
 #
 #     def parse(self):

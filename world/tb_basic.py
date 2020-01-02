@@ -736,7 +736,7 @@ class CmdFight(MuxCommand):
                 return
         lower_case = [x.lower() for x in target.db.acc_sg]
         if self.args.strip().lower() not in lower_case and self.args:
-            self.caller.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
+            self.caller.msg(f"(Did you mean '{target.db.acc_sg}'?)")
             return
 
         attacker = self.caller
@@ -830,7 +830,7 @@ class CmdAttack(MuxCommand):
                 return
         lower_case = [x.lower() for x in target.db.acc_sg]
         if self.args.strip().lower() not in lower_case and self.args:
-            self.caller.msg(f"(Did you mean '{target.db.acc_sg[0]}'?)")
+            self.caller.msg(f"(Did you mean '{target.db.acc_sg}'?)")
             return
 
         attacker = self.caller

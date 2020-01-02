@@ -551,7 +551,7 @@ class CmdWear(MuxCommand):
         # JI (12/7/19) Make sure grammar happens:
         lower_case = [x.lower() for x in clothing.db.acc_sg]
         if self.args not in lower_case:
-            self.caller.msg(f"(Did you mean '{clothing.db.acc_sg[0]}')")
+            self.caller.msg(f"(Did you mean '{clothing.db.acc_sg}')")
             return
         clothing.wear(self.caller, wearstyle)
 
@@ -599,7 +599,7 @@ class CmdRemove(MuxCommand):
         # JI (12/7/19) Ensure proper grammer
         lower_case = [x.lower() for x in clothing.db.acc_sg]
         if self.args.lower() not in lower_case:
-            self.caller.msg(f"(Did you mean '{clothing.db.acc_sg[0]}'?)")
+            self.caller.msg(f"(Did you mean '{clothing.db.acc_sg}'?)")
             return
         clothing.remove(self.caller)
 
@@ -760,7 +760,7 @@ class CmdDrop(MuxCommand):
         # JI (12/7/19) Make sure grammar is followed
         lower_case = [x.lower() for x in obj.db.acc_sg]
         if self.args.lower() not in lower_case:
-            caller.msg(f"(Did you mean '{obj.db.acc_sg[0]}'?)")
+            caller.msg(f"(Did you mean '{obj.db.acc_sg}'?)")
             return
         # Remove clothes if they're dropped.
         if obj.db.worn:
@@ -863,7 +863,11 @@ class CmdInventory(MuxCommand):
         wear_table = evtable.EvTable(border="header")
         for item in items:
             if not item.db.worn:
-                carry_table.add_row("|C%s|n" % item.db.acc_sg[0], '(dextra)' if item.db.held == 'right' else '(sinistra)', item.db.desc or "")
+                if item.db.is_glowing:
+                    glowing = f"|y(arden{'s' if item.db.gender == 3 else 'tem'})|n |C{item.db.acc_sg[0]}|n"
+                    carry_table.add_row(f"{glowing} {'(dextra)' if item.db.held == 'right' else '(sinistra)'} {item.db.desc or ''}")
+                else:
+                    carry_table.add_row("|C%s|n" % item.db.acc_sg[0], '(dextra)' if item.db.held == 'right' else '(sinistra)', item.db.desc or "")
         if carry_table.nrows == 0:
             carry_table.add_row("|CNihil.|n", "")
         string = "|wTenes:\n%s" % carry_table

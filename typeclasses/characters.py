@@ -8,6 +8,7 @@ creation commands.
 
 """
 # from evennia import DefaultCharacter
+from evennia import DefaultRoom, DefaultCharacter
 from evennia.contrib.ingame_python.typeclasses import EventCharacter
 from latin.latin_declension import DeclineNoun
 from typeclasses.latin_noun import LatinNoun
@@ -581,9 +582,12 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
         for garment in clothes_list:
             # if 'worn' is True, just append the name
             if garment.db.worn is True:
+                if garment.db.is_glowing:
+                    worn_string_list.append(f"|yarden{'s' if garment.db.gender == 3 else 'tem'}|n {garment.db.acc_sg[0]}")
                 # JI (12/7/19) append the accusative name to the description,
                 # since these will be direct objects
-                worn_string_list.append(garment.db.acc_sg[0])
+                else:
+                    worn_string_list.append(garment.db.acc_sg[0])
             # Otherwise, append the name and the string value of 'worn'
             elif garment.db.worn:
                 worn_string_list.append("%s %s" % (garment.name, garment.db.worn))
@@ -592,7 +596,10 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
         held_list = []
         for possession in possessions:
             if possession.db.held:
-                held_list.append(possession.db.acc_sg[0])
+                if possession.db.is_glowing:
+                    held_list.append(f"|y(arden{'s' if possession.db.gender == 3 else 'tem'})|n {possession.db.acc_sg[0]}")
+                else:
+                    held_list.append(possession.db.acc_sg[0])
         if desc:
             string += "%s" % desc
         # Append held items.
@@ -607,10 +614,25 @@ class Character(EventCharacter,LatinNoun,TBBasicCharacter):
         # Thinking that the above, added for clothing, might need to only be in the
         # character typeclass
     def at_after_move(self,source_location):
-        target = self.location
-        self.msg((self.at_look(target), {"type": "look"}), options=None)
+        super().at_after_move(source_location)
+
+#        origin = source_location
+#        destination = self.location
+#        Room = DefaultRoom
+#        if isinstance(origin, Room) and isinstance(destination, Room):
+#            self.callbacks.call("move", self, origin, destination)
+#            destination.callbacks.call("move", self, origin, destination)
+#
+#            # Call the 'greet' event of characters in the location
+#            for present in [
+#                o for o in destination.contents if isinstance(o, DefaultCharacter) and o is not self
+#            ]:
+#                present.callbacks.call("greet", present, self)
+#
+#        target = self.location
+#        self.msg((self.at_look(target), {"type": "look"}), options=None)
 
         if self.db.hp:
             prompt = "\n|wVita: %i/%i) |n" % (self.db.hp['current'],self.db.hp['max'])
 
-            self.msg(prompt=prompt)
+            self.msg(prompt)
