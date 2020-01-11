@@ -180,10 +180,12 @@ class LatinNoun(DefaultObject):
         # get and identify all objects
         visible = (con for con in self.contents if con != looker and con.access(looker, "view"))
         exits, users, things = [], [], defaultdict(list)
+        # adjusted the exit name to take out the dbref so builders can
+        # click on the exits to go there
         for con in visible:
             key = con.get_display_name(looker)
             if con.destination:
-                exits.append(key)
+                exits.append(con.key)
             elif con.has_account:
                 if con.db.is_glowing:
                     users.append("|y(ardens)|n |c%s|n" % key)
