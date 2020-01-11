@@ -225,7 +225,7 @@ class LatinNoun(DefaultObject):
             # string += "\n|wAd hos locos potes ire:|n\n " + LatinNoun.list_to_string(exits)
             colorful_exits = []
             for exit in exits:
-                colorful_exits.append(f"|g{exit}|n")
+                colorful_exits.append(f"|lc{exit}|lt|g{exit}|n|le")
             string += "\n|wAd hos locos potes ire:|n\n " + LatinNoun.list_to_string(colorful_exits)
         if users or things:
             # handle pluralization of things (never pluralize users)

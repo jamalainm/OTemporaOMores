@@ -141,6 +141,17 @@ LAMP = {
         "desc":"a small, simple, terracotta oil lamp",
         "physical":{"material":"clay","rigid":True,"mass":0.15,"volume":0.07}
         }
+
+VESTAL_HEARTH = {
+        "key":"Focus Vestae",
+        "location":"#266",
+        "typeclass":"typeclasses.myobjects.Hearth",
+        "nom_sg":["focus"],
+        "gen_sg":["foci"],
+        "gender":"2",
+        "desc":"A large, marble hearth; it's diameter is nearly 1 |mpassus|n (pace).",
+        "physical":{"material":"marble","rigid":True,"mass":8512,"volume":3140}
+        }
 # from random import randint
 #
 # GOBLIN = {

@@ -87,3 +87,7 @@ class FlammableCmdSet(CmdSet):
     def at_cmdset_creation(self):
         self.add(CmdLight())
         self.add(CmdPutOut())
+
+class IgniteableCmdSet(CmdSet):
+    def at_cmdset_creation(self):
+        self.add(CmdLight())

@@ -33,7 +33,9 @@ folder and edit it to add/remove links to the menu.
             <!-- end evennia documentation -->
             
             <!-- game views -->
-            <li><a class="nav-link" href="{% url 'characters' %}">Characters</a></li>
+	    <!-- Changing the page that 'Characters' points to, since I'm not using
+	     the DB for anything; was 'characters' is 'character-create' now -->
+            <li><a class="nav-link" href="{% url 'character-create' %}">Characters</a></li>
             <li><a class="nav-link" href="{% url 'channels' %}">Channels</a></li>
             <li><a class="nav-link" href="{% url 'help' %}">Help</a></li>
             <!-- end game views -->
